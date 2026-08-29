@@ -1,7 +1,8 @@
-metr 0.1.0
+metr 0.2.0
 
 1. Open the DMG and drag metr.app to Applications.
 2. Open metr from Applications.
 3. If macOS blocks this unsigned preview, right-click metr and choose Open.
+4. For authoritative Claude Code limits, run `./configure-claude-statusline.sh` from the metr source folder once. Claude Code will then feed its official rate-limit payload to metr locally.
 
 This build is ad-hoc signed, not notarized. No Apple Developer ID was available.

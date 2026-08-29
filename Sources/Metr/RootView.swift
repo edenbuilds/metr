@@ -205,8 +205,9 @@ struct ChipButton: View {
 
 // MARK: - Rail
 
-/// The collapsed edge rail. Thin enough to ignore, but capped with the mark so
-/// it is recognisably Metr rather than a stray line on the screen edge.
+/// The minimized dock: a small, glanceable control surface with one affordance
+/// per provider. It stays useful while minimized and opens the full panel with
+/// one click, matching the edge-popover language of the reference.
 struct RailView: View {
     @EnvironmentObject private var store: UsageStore
     @EnvironmentObject private var motion: MotionSettings
@@ -214,50 +215,91 @@ struct RailView: View {
     @Environment(\.panelActions) private var actions
 
     @State private var hovering = false
+    @State private var hoveredProvider: String?
 
     private var isVertical: Bool { store.preferences.mode != .top }
 
     var body: some View {
-        let status = store.headerStatus
-        let thickness = hovering ? Theme.railHoverThickness : Theme.railThickness
-        let tint = status.isKnown ? Brand.statusColor(for: status.severity) : Brand.warmGray
-
-        ZStack {
-            Capsule()
-                .fill(tint.opacity(hovering ? 1 : 0.82))
-                .frame(
-                    width: isVertical ? thickness : Theme.railLength,
-                    height: isVertical ? Theme.railLength : thickness
-                )
-                .overlay(
-                    Capsule()
-                        .fill(Brand.bone.opacity(0.35))
-                        .frame(
-                            width: isVertical ? thickness : Theme.railLength * fillFraction,
-                            height: isVertical ? Theme.railLength * fillFraction : thickness
-                        ),
-                    alignment: isVertical ? .bottom : .leading
-                )
-                .shadow(color: .black.opacity(0.22), radius: 5, y: 1)
+        let providers = store.visibleProviders
+        Group {
+            if isVertical {
+                VStack(spacing: Theme.Space.tight) {
+                    ForEach(providers) { provider in dockItem(provider) }
+                }
+                .padding(.vertical, Theme.dockSidePadding)
+            } else {
+                HStack(spacing: Theme.Space.snug) {
+                    ForEach(providers) { provider in dockItem(provider) }
+                }
+                .padding(.horizontal, Theme.Space.snug)
+            }
         }
+        .background(dockSurface)
+        .clipShape(Capsule())
+        .overlay(Capsule().strokeBorder(Color.primary.opacity(0.14), lineWidth: 0.5))
+        .shadow(color: .black.opacity(hovering ? 0.28 : 0.2), radius: hovering ? 16 : 10, y: 4)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .contentShape(Rectangle())
         .onHover { hovering in
             withAnimation(motion.accent) { self.hovering = hovering }
             actions.setRailHover(hovering)
         }
-        .onTapGesture { actions.setExpanded(true) }
         .animation(motion.accent, value: hovering)
-        .help("\(Brand.name) — \(status.label). Click to open.")
         .accessibilityElement()
-        .accessibilityLabel("\(Brand.name), \(status.label)")
-        .accessibilityHint("Opens the usage panel")
+        .accessibilityLabel("\(Brand.name) usage dock")
+        .accessibilityHint("Choose a provider to open the detailed usage panel")
+    }
+
+    private var dockSurface: some ShapeStyle {
+        Color(nsColor: .controlBackgroundColor).opacity(0.98)
+    }
+
+    private func dockItem(_ provider: ProviderSnapshot) -> some View {
+        let fraction = provider.usedFraction ?? 0
+        let tint = Brand.providerColor(for: provider.identity)
+        let isHovered = hoveredProvider == provider.id
+        return Button {
+            actions.setExpanded(true)
+        } label: {
+            Group {
+                if isVertical {
+                    VStack(spacing: 2) { badge(provider, tint: tint, fraction: fraction); metric(provider) }
+                } else {
+                    HStack(spacing: 4) { badge(provider, tint: tint, fraction: fraction); metric(provider) }
+                }
+            }
+            .frame(width: isVertical ? 62 : 80, height: isVertical ? 52 : 52)
+            .background(Color.primary.opacity(isHovered ? 0.09 : 0.035), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .scaleEffect(isHovered ? 1.06 : 1)
+        }
+        .buttonStyle(.plain)
+        .onHover { value in
+            withAnimation(motion.accent) { hoveredProvider = value ? provider.id : nil }
+        }
+        .help("Open \(provider.identity.name) usage")
+        .accessibilityElement()
+        .accessibilityLabel("\(provider.identity.name), \(store.compactValue(for: provider))")
+        .accessibilityHint("Opens detailed usage")
         .accessibilityAddTraits(.isButton)
     }
 
-    /// The rail itself shows the level, so the collapsed state still says something.
-    private var fillFraction: CGFloat {
-        CGFloat(min(1, max(0.05, store.focusProvider?.usedFraction ?? 0.05)))
+    private func badge(_ provider: ProviderSnapshot, tint: Color, fraction: Double) -> some View {
+        ZStack {
+            Circle().stroke(Color.primary.opacity(0.14), lineWidth: 3)
+            Circle().trim(from: 0, to: CGFloat(min(1, max(0, fraction))))
+                .stroke(tint, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+            Image(systemName: provider.identity.id == "claude" ? "sparkles" : "terminal")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(tint)
+        }
+        .frame(width: 30, height: 30)
+    }
+
+    private func metric(_ provider: ProviderSnapshot) -> some View {
+        Text(store.compactValue(for: provider))
+            .font(.system(size: 10, weight: .semibold, design: .rounded).monospacedDigit())
+            .foregroundStyle(.primary)
     }
 }
 

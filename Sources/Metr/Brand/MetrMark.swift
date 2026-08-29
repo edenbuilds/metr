@@ -213,6 +213,10 @@ enum Brand {
     static let name = "metr"
     static let tagline = "Your AI, metered."
 
+    static func providerColor(for identity: ProviderIdentity) -> Color {
+        Theme.tint(identity.tintName)
+    }
+
     /// Status colours drawn from the brand palette rather than the stock
     /// system traffic-light greens and reds, which read as generic.
     static func statusColor(for severity: Severity) -> Color {

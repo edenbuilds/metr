@@ -11,7 +11,7 @@ public final class LocalActivityDataSource: UsageDataSource {
     public let kind: DataSourceKind = .local
 
     public var provenance: String {
-        "Reads local Codex/Claude session files. With an existing provider login, quota comes from chatgpt.com/backend-api/wham/usage or api.anthropic.com/api/oauth/usage. Credentials are read-only and never leave the provider request."
+        "Reads local Codex/Claude session files. Quota prefers Claude Code's official statusLine rate_limits, then read-only provider endpoints, then an explicitly estimated local proxy."
     }
 
     /// Assumption used for the cost estimate, surfaced verbatim in the UI.

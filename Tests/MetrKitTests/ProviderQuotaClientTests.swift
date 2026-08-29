@@ -36,6 +36,9 @@ final class ProviderQuotaClientTests: XCTestCase {
         ])
         XCTAssertEqual(reading?.fraction, 0.005)
         XCTAssertNotNil(reading?.resetAt)
+
+        let official = ProviderQuotaClient.parseClaudeWindow(["used_percentage": 12.0])
+        XCTAssertEqual(official?.fraction, 0.12, "Claude Code statusLine uses used_percentage")
     }
 
     func testClaudeRetainsImmediateAndWeeklyWindows() {

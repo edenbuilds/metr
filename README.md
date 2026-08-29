@@ -12,7 +12,7 @@ A quiet native macOS utility for AI quota, reset windows, pace, and local activi
 
 In one glance: how much you have used, how much remains, when the window resets, whether your pace is safe, and which provider needs attention.
 
-- **Side dock** hugs either screen edge and collapses to a 7pt usage rail.
+- **Side dock** hugs either screen edge and collapses to a provider-aware dock with readable rings and one-click expansion.
 - **Top bar** sits beneath the menu bar; the menu-bar glyph remains glanceable everywhere.
 - **Both** keeps the side dock plus the menu-bar readout.
 - Provider rows expand for source, context, cost assumptions, and exact reset detail.
@@ -21,7 +21,9 @@ In one glance: how much you have used, how much remains, when the window resets,
 
 ## Install
 
-Download `metr-v0.1.0.dmg`, drag `metr.app` to Applications, then open it. This preview is ad-hoc signed rather than notarized, so another Mac may require right-click → Open once.
+Download `metr-v0.2.0.dmg`, drag `metr.app` to Applications, then open it. This preview is ad-hoc signed rather than notarized, so another Mac may require right-click → Open once.
+
+For the most reliable Claude Code quota readings, run `./configure-claude-statusline.sh` after installing. It makes a timestamped backup of Claude Code settings and installs an official `rate_limits` statusLine hook. metr accepts that fresh local snapshot for ten minutes, then falls back honestly.
 
 Build locally on macOS 13+ with Xcode Command Line Tools:
 
@@ -47,9 +49,9 @@ Create the Universal 2 DMG and ZIP:
 | Provider | Usage and reset | Local activity | Confidence |
 |---|---|---|---|
 | Codex | `chatgpt.com/backend-api/wham/usage`, using the access token already stored in `~/.codex/auth.json` | `~/.codex/session_index.jsonl` | Provider quota measured; local fallback estimated |
-| Claude Code | `api.anthropic.com/api/oauth/usage`, using Claude Code’s existing read-only OAuth credential | timestamps under `~/.claude/projects/` and `~/.claude/stats-cache.json` | Provider quota measured; local fallback estimated |
+| Claude Code | Official Claude Code `statusLine` `rate_limits` snapshot; OAuth usage endpoint as fallback | timestamps under `~/.claude/projects/` and `~/.claude/stats-cache.json` | Official/API quota measured; local fallback estimated |
 
-Credentials are sent only to their own provider endpoint. metr never refreshes, rewrites, stores, or uploads provider credentials. If an endpoint or credential is unavailable, metr says so or keeps an explicitly labelled local activity estimate; it never fabricates 0% usage.
+Credentials are sent only to their own provider endpoint. metr never refreshes, rewrites, stores, or uploads provider credentials. The statusLine helper stores only model/rate-limit data atomically in `~/.metr/statusline/`. If an endpoint or credential is unavailable, metr says so or keeps an explicitly labelled local activity estimate; it never fabricates 0% usage.
 
 ## Privacy and timezone
 

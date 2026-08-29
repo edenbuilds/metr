@@ -42,6 +42,12 @@ enum ProviderQuotaClient {
     }
 
     static func fetchClaude(home: URL, now: Date) async -> ProviderSnapshot? {
+        // Claude Code's statusLine payload is the strongest source available:
+        // it is produced by the signed-in client itself and includes official
+        // rate_limits without requiring metr to handle an OAuth credential.
+        if let official = officialClaudeStatusline(home: home, now: now) {
+            return official
+        }
         let credentials = await Task.detached(priority: .utility) { claudeCredentials(home: home) }.value
         guard let credentials else { return nil }
         var request = URLRequest(url: claudeUsageURL)
@@ -120,7 +126,7 @@ enum ProviderQuotaClient {
         span: TimeInterval = 5 * 3600
     ) -> WindowReading? {
         guard let object = value as? [String: Any],
-              let raw = number(object["utilization"] ?? object["used_percent"]) else { return nil }
+              let raw = number(object["utilization"] ?? object["used_percent"] ?? object["used_percentage"]) else { return nil }
         let reset: Date? = {
             if let seconds = number(object["resets_at"]) { return Date(timeIntervalSince1970: seconds) }
             guard let string = object["resets_at"] as? String else { return nil }
@@ -141,6 +147,29 @@ enum ProviderQuotaClient {
             parseClaudeWindow(object["five_hour"], label: "5-hour window", span: 5 * 3600),
             parseClaudeWindow(object["seven_day"], label: "7-day window", span: 7 * 86_400)
         ].compactMap { $0 }
+    }
+
+    private static func officialClaudeStatusline(home: URL, now: Date) -> ProviderSnapshot? {
+        let url = home.appendingPathComponent(".metr/statusline/latest.json")
+        guard let data = try? Data(contentsOf: url),
+              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let captured = number(object["captured_at_epoch"]),
+              now.timeIntervalSince1970 - captured <= 600,
+              let limits = object["rate_limits"] as? [String: Any] else { return nil }
+
+        let periods = [
+            parseClaudeWindow(limits["five_hour"], label: "5-hour window", span: 5 * 3600),
+            parseClaudeWindow(limits["seven_day"], label: "7-day window", span: 7 * 86_400)
+        ].compactMap { $0 }
+        guard let reading = periods.first else { return nil }
+        return snapshot(
+            identity: KnownProvider.claude,
+            plan: object["model"] as? String,
+            reading: reading,
+            periods: periods,
+            now: now,
+            source: "Official Claude Code statusLine rate_limits."
+        )
     }
 
     private static func snapshot(

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.0 — 2026-08-30
+
+- Replaced the minimized edge line with an adaptive side/top provider dock with ring meters, hover feedback, accessible actions, and spring motion.
+- Added the `metr-statusline` helper for Claude Code’s official `rate_limits` statusLine payload, with ten-minute freshness expiry and atomic local writes.
+- Added a safe Claude Code statusLine installer with timestamped settings backups.
+- Added tests proving official Claude statusline data wins over local estimates and retains weekly limits.
+
 ## 0.1.0 — 2026-08-30
 
 - Renamed the product and bundle to deliberately lowercase `metr`.

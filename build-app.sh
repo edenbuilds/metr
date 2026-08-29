@@ -16,9 +16,11 @@ fi
 if [[ "$CONFIG" == "release" ]]; then
   swift build -c release --arch arm64 --arch x86_64
   BINARY=".build/apple/Products/Release/metr"
+  STATUSLINE_BINARY=".build/apple/Products/Release/metr-statusline"
 else
   swift build -c "$CONFIG"
   BINARY=".build/$CONFIG/metr"
+  STATUSLINE_BINARY=".build/$CONFIG/metr-statusline"
 fi
 
 APP_DIR="$(pwd)/metr.app"
@@ -26,12 +28,15 @@ if [[ -e "$APP_DIR" ]]; then
   OLD_APP="$(mktemp -d "${TMPDIR:-/tmp}/metr-old-app.XXXXXX")"
   mv "$APP_DIR" "$OLD_APP/"
 fi
-mkdir -p "$APP_DIR/Contents/MacOS" "$APP_DIR/Contents/Resources"
+mkdir -p "$APP_DIR/Contents/MacOS" "$APP_DIR/Contents/Helpers" "$APP_DIR/Contents/Resources"
 cp "$BINARY" "$APP_DIR/Contents/MacOS/metr"
+cp "$STATUSLINE_BINARY" "$APP_DIR/Contents/Helpers/metr-statusline"
 cp Info.plist "$APP_DIR/Contents/Info.plist"
 cp Branding/metr.icns "$APP_DIR/Contents/Resources/metr.icns"
 
-# Ad-hoc signature: enough to run locally and register a login item. Sending it
-# to another Mac needs a Developer ID and notarisation — see README.
+# Ad-hoc signature: enough to run locally and register a login item. Sign the
+# nested helper first so Gatekeeper sees a coherent bundle. Sending it to
+# another Mac needs a Developer ID and notarisation — see README.
+codesign --force --sign - "$APP_DIR/Contents/Helpers/metr-statusline" >/dev/null
 codesign --force --sign - "$APP_DIR" >/dev/null
 echo "Built $APP_DIR ($CONFIG)"

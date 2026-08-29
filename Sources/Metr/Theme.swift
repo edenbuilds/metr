@@ -33,13 +33,11 @@ enum Theme {
     /// larger than the card by this much on every side so the shadow has room.
     static let shadowMargin: CGFloat = 12
 
-    /// The collapsed edge rail. Thin enough not to take a bite out of whatever
-    /// is underneath, but with a branded cap so it reads as *something*, not a
-    /// rendering artefact.
-    static let railThickness: CGFloat = 7
-    static let railLength: CGFloat = 96
-    /// Rail grows to this while hovered, so the target is comfortable to hit.
-    static let railHoverThickness: CGFloat = 13
+    /// The minimized dock is a real control surface, not a decorative line.
+    static let dockWidth: CGFloat = 76
+    static let dockRowHeight: CGFloat = 58
+    static let dockTopHeight: CGFloat = 68
+    static let dockSidePadding: CGFloat = 6
 
     // MARK: Typography
 

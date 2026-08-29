@@ -151,6 +151,30 @@ final class DataSourceTests: XCTestCase {
         }
     }
 
+    func testOfficialClaudeStatuslineWinsOverLocalEstimate() async throws {
+        let home = try makeFixtureHome()
+        defer { try? FileManager.default.removeItem(at: home) }
+        let url = home.appendingPathComponent(".metr/statusline/latest.json")
+        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        let payload: [String: Any] = [
+            "captured_at_epoch": Date().timeIntervalSince1970,
+            "model": "Sonnet",
+            "rate_limits": [
+                "five_hour": ["used_percentage": 12.0],
+                "seven_day": ["used_percentage": 34.0]
+            ]
+        ]
+        let data = try JSONSerialization.data(withJSONObject: payload)
+        try data.write(to: url, options: .atomic)
+
+        let snapshot = await LocalActivityDataSource(home: home).fetch(now: Date())
+        let claude = try XCTUnwrap(snapshot.providers.first { $0.id == KnownProvider.claude.id })
+        XCTAssertEqual(claude.confidence, .measured)
+        XCTAssertEqual(claude.usedFraction, 0.12)
+        XCTAssertEqual(claude.quotaPeriods.map(\.label), ["5-hour window", "7-day window"])
+        XCTAssertTrue(claude.sourceDescription.contains("Official Claude Code statusLine"))
+    }
+
     func testCostModelStatesItsAssumption() {
         let model = LocalActivityDataSource.CostModel(tokensPerMessage: 1_000, dollarsPerMillionTokens: 5)
         XCTAssertEqual(model.estimate(messages: 1_000), 5.0, accuracy: 0.0001)

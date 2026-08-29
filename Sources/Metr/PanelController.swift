@@ -264,26 +264,29 @@ final class PanelController: NSObject, NSWindowDelegate {
         }
     }
 
-    /// The collapsed rail: a thin strip hugging the edge.
+    /// The minimized dock hugs the selected edge while keeping a comfortable
+    /// target for pointer, keyboard and VoiceOver users.
     private func railFrame(in visible: CGRect) -> CGRect {
-        let pad: CGFloat = 5
-        let thickness = Theme.railHoverThickness + pad * 2
-        let length = Theme.railLength + pad * 2
+        let count = CGFloat(max(1, store.visibleProviders.count))
+        let sideWidth = Theme.dockWidth
+        let sideHeight = count * Theme.dockRowHeight + Theme.dockSidePadding * 2
+        let topWidth = max(176, count * 88 + 20)
+        let topHeight = Theme.dockTopHeight
         let offset = CGFloat(min(max(store.preferences.edgeOffset, 0), 1))
 
         switch store.preferences.mode {
         case .top:
-            let travel = max(0, visible.width - length)
+            let travel = max(0, visible.width - topWidth)
             return CGRect(x: visible.minX + travel * offset,
-                          y: visible.maxY - thickness,
-                          width: length, height: thickness)
+                          y: visible.maxY - topHeight,
+                          width: topWidth, height: topHeight)
         case .side, .both:
-            let travel = max(0, visible.height - length)
-            let y = visible.maxY - length - travel * offset
+            let travel = max(0, visible.height - sideHeight)
+            let y = visible.maxY - sideHeight - travel * offset
             let x = store.preferences.edge == .trailing
-                ? visible.maxX - thickness
+                ? visible.maxX - sideWidth
                 : visible.minX
-            return CGRect(x: x, y: y, width: thickness, height: length)
+            return CGRect(x: x, y: y, width: sideWidth, height: sideHeight)
         }
     }
 
