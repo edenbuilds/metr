@@ -1,5 +1,5 @@
 #!/usr/bin/env swift
-// Renders Tidemark's app icon and menu-bar template from the same geometry the
+// Renders metr's app icon and menu-bar template from the same geometry the
 // app draws at runtime, so the mark can never drift between the two.
 import AppKit
 
@@ -122,7 +122,7 @@ func writePNG(_ image: NSImage, to url: URL) {
 }
 
 let root = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-let iconset = root.appendingPathComponent("Branding/Tidemark.iconset")
+let iconset = root.appendingPathComponent("Branding/metr.iconset")
 try? FileManager.default.createDirectory(at: iconset, withIntermediateDirectories: true)
 
 for (size, scale) in [(16,1),(16,2),(32,1),(32,2),(128,1),(128,2),(256,1),(256,2),(512,1),(512,2)] {
@@ -135,10 +135,10 @@ for (size, scale) in [(16,1),(16,2),(32,1),(32,2),(128,1),(128,2),(256,1),(256,2
 let menubar = root.appendingPathComponent("Branding/menubar")
 try? FileManager.default.createDirectory(at: menubar, withIntermediateDirectories: true)
 for scale in [1, 2, 3] {
-    let name = scale == 1 ? "TidemarkTemplate.png" : "TidemarkTemplate@\(scale)x.png"
+    let name = scale == 1 ? "metrTemplate.png" : "metrTemplate@\(scale)x.png"
     writePNG(renderMark(size: CGFloat(18 * scale), template: true), to: menubar.appendingPathComponent(name))
 }
 
 // A large flat mark for the README and the share page.
-writePNG(renderMark(size: 1024, template: false), to: root.appendingPathComponent("Branding/tidemark-icon-1024.png"))
+writePNG(renderMark(size: 1024, template: false), to: root.appendingPathComponent("Branding/metr-icon-1024.png"))
 print("wrote icons")

@@ -2,17 +2,17 @@
 import PackageDescription
 
 let package = Package(
-    name: "Tidemark",
+    name: "metr",
     platforms: [.macOS(.v13)],
     products: [
-        .executable(name: "Tidemark", targets: ["Tidemark"]),
-        .library(name: "TidemarkKit", targets: ["TidemarkKit"])
+        .executable(name: "metr", targets: ["Metr"]),
+        .library(name: "MetrKit", targets: ["MetrKit"])
     ],
     targets: [
         // Data model + logic. No AppKit/SwiftUI, so it is testable headlessly.
-        .target(name: "TidemarkKit"),
+        .target(name: "MetrKit"),
         // Presentation layer only.
-        .executableTarget(name: "Tidemark", dependencies: ["TidemarkKit"]),
-        .testTarget(name: "TidemarkKitTests", dependencies: ["TidemarkKit"])
+        .executableTarget(name: "Metr", dependencies: ["MetrKit"]),
+        .testTarget(name: "MetrKitTests", dependencies: ["MetrKit"])
     ]
 )
