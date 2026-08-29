@@ -29,11 +29,15 @@ struct ProviderLogo: View {
 
     private func loadImage() -> NSImage? {
         if let cached = Self.cache[identity.id] { return cached }
-        guard let url = Bundle.module.url(
+        let url = Bundle.module.url(
             forResource: identity.id,
             withExtension: "svg",
             subdirectory: "ProviderLogos"
-        ), let image = NSImage(contentsOf: url) else {
+        ) ?? Bundle.module.url(
+            forResource: identity.id,
+            withExtension: "svg"
+        )
+        guard let url, let image = NSImage(contentsOf: url) else {
             return nil
         }
         // SwiftUI can keep an SVG NSImage's vector representation blank on a
@@ -55,7 +59,12 @@ struct ProviderLogo: View {
         ), let context = NSGraphicsContext(bitmapImageRep: bitmap) else { return nil }
         NSGraphicsContext.saveGraphicsState()
         NSGraphicsContext.current = context
-        image.draw(in: NSRect(origin: .zero, size: canvas), from: .zero, operation: .sourceOver, fraction: 1)
+        image.draw(
+            in: NSRect(origin: .zero, size: canvas),
+            from: NSRect(origin: .zero, size: image.size),
+            operation: .sourceOver,
+            fraction: 1
+        )
         context.flushGraphics()
         NSGraphicsContext.restoreGraphicsState()
 

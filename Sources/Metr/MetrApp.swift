@@ -12,8 +12,21 @@ struct MetrApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     var body: some Scene {
-        // The panel and preferences window are both AppKit-owned, so the app's
-        // only Scene is an empty Settings placeholder.
+        // MenuBarExtra owns the persistent status item. This keeps the metr
+        // mark visible through macOS menu-bar layout/overflow rules while the
+        // AppKit panel remains responsible for the floating dock.
+        MenuBarExtra {
+            Button("Show metr") { appDelegate.showPanelFromMenuBar() }
+            Button("Refresh now") { appDelegate.refreshFromMenuBar() }
+            Divider()
+            Button("Preferences…") { appDelegate.showPreferencesFromMenuBar() }
+            Button("Quit metr") { NSApp.terminate(nil) }
+        } label: {
+            // MenuBarExtra's native label is deliberately text-backed: macOS
+            // can elide a custom SwiftUI drawing in a crowded menu bar, while
+            // this keeps the product name and glyph discoverable at all times.
+            Label("metr", systemImage: "drop.fill")
+        }
         Settings { EmptyView() }
     }
 }
@@ -76,6 +89,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         observePreferencesRequests()
     }
 
+    func showPanelFromMenuBar() {
+        panelController.show(activating: true)
+    }
+
+    func refreshFromMenuBar() {
+        Task { await store.refresh() }
+    }
+
+    func showPreferencesFromMenuBar() {
+        showPreferences()
+    }
+
     private func applyAppearance(_ appearance: AppearanceMode) {
         switch appearance {
         case .system: NSApp.appearance = nil
@@ -93,14 +118,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     // MARK: Status item
 
     private func buildStatusItem() {
-        statusItem = NSStatusBar.system.statusItem(withLength: 22)
+        statusItem = NSStatusBar.system.statusItem(withLength: 48)
         statusItem.behavior = []          // never let a drag remove it from the menu bar
         statusItem.isVisible = true
         guard let button = statusItem.button else { return }
-        statusItem.length = 22
-        button.imagePosition = .imageOnly
+        statusItem.length = 48
+        button.imagePosition = .imageLeading
         button.imageScaling = .scaleProportionallyUpOrDown
-        button.image = NSImage(named: NSImage.applicationIconName)
+        button.title = "metr"
+        button.font = NSFont.systemFont(ofSize: 11, weight: .semibold)
+        button.image = brandStatusImage()
             ?? MenuBarIcon.image(level: 0.15, severity: .nominal, isKnown: false)
         button.image?.size = NSSize(width: 18, height: 18)
         button.image?.isTemplate = false
@@ -110,6 +137,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         button.action = #selector(statusItemClicked)
         button.sendAction(on: [.leftMouseUp, .rightMouseUp])
         button.setAccessibilityLabel("metr")
+        NSLog("metr: menu-bar status item installed")
     }
 
     /// Status title carries the headline number so the menu bar itself is
@@ -117,10 +145,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private func updateStatusItem() {
         guard let button = statusItem?.button else { return }
         let status = store.headerStatus
-        button.title = ""
+        button.title = "metr"
         // The menu-bar glyph fills with the same level the panel shows, so the
         // menu bar alone tells you where you stand.
-        button.image = NSImage(named: NSImage.applicationIconName)
+        button.image = brandStatusImage()
             ?? MenuBarIcon.image(
                 level: store.focusProvider?.usedFraction ?? 0.15,
                 severity: status.severity,
@@ -165,7 +193,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 let offsets: [Double] = [0, 0.04, 0.08, 0.04]
                 let status = self.store.headerStatus
                 let level = min(1, (self.store.focusProvider?.usedFraction ?? 0.15) + offsets[self.statusWaveStep % offsets.count])
-                button.image = NSImage(named: NSImage.applicationIconName)
+                button.image = self.brandStatusImage()
                     ?? MenuBarIcon.image(level: level, severity: status.severity, isKnown: status.isKnown)
                 button.image?.size = NSSize(width: 18, height: 18)
                 button.image?.isTemplate = false
@@ -175,6 +203,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         timer.tolerance = 0.03
         RunLoop.main.add(timer, forMode: .common)
         statusAnimationTimer = timer
+    }
+
+    private func brandStatusImage() -> NSImage? {
+        guard let url = Bundle.main.url(forResource: "metr", withExtension: "icns"),
+              let image = NSImage(contentsOf: url) else { return nil }
+        image.size = NSSize(width: 18, height: 18)
+        return image
     }
 
     private func pulseStatusItem() {

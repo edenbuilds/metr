@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.4.7 — 2026-08-30
+
+- Made the native menu-bar label text-backed with a visible drop glyph and metr name so it remains discoverable even when custom status-item artwork is elided by macOS.
+
+## 0.4.6 — 2026-08-30
+
+- Replaced the unreliable manual status item with a native `MenuBarExtra` scene so the metr glyph remains visible and accessible in the menu bar.
+- Kept the floating panel actions available from the native menu-bar menu.
+
+## 0.4.5 — 2026-08-30
+
+- Made the menu-bar image load directly from the packaged `metr.icns` resource and added a visible `metr` fallback label.
+- Added launch diagnostics for the menu-bar status-item lifecycle.
+
+## 0.4.3 — 2026-08-30
+
+- Fixed SVG rasterization source bounds so bundled provider marks render visibly in the dock and expanded panel.
+- Made the menu-bar status item reserve a visible branded glyph slot with a compact metr label.
+
+## 0.4.4 — 2026-08-30
+
+- Fixed the packaged resource lookup for flattened Swift Package Manager SVG assets.
+
 ## 0.4.2 — 2026-08-30
 
 - Rasterized bundled SVG marks into stable AppKit representations so provider logos remain visible in SwiftUI docks and cards across macOS releases and themes.
