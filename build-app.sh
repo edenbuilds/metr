@@ -1,5 +1,5 @@
 #!/bin/zsh
-# Builds Tidemark.app.
+# Builds metr.app.
 #   ./build-app.sh            release build
 #   ./build-app.sh debug      debug build
 set -euo pipefail
@@ -8,19 +8,28 @@ cd "$(dirname "$0")"
 CONFIG="${1:-release}"
 
 # Regenerate the icon from the same geometry the app draws at runtime.
-if [[ ! -f Branding/Tidemark.icns ]]; then
+if [[ ! -f Branding/metr.icns ]]; then
   swift Tools/make-icons.swift
-  iconutil -c icns Branding/Tidemark.iconset -o Branding/Tidemark.icns
+  iconutil -c icns Branding/metr.iconset -o Branding/metr.icns
 fi
 
-swift build -c "$CONFIG"
+if [[ "$CONFIG" == "release" ]]; then
+  swift build -c release --arch arm64 --arch x86_64
+  BINARY=".build/apple/Products/Release/metr"
+else
+  swift build -c "$CONFIG"
+  BINARY=".build/$CONFIG/metr"
+fi
 
-APP_DIR="$(pwd)/Tidemark.app"
-rm -rf "$APP_DIR"
+APP_DIR="$(pwd)/metr.app"
+if [[ -e "$APP_DIR" ]]; then
+  OLD_APP="$(mktemp -d "${TMPDIR:-/tmp}/metr-old-app.XXXXXX")"
+  mv "$APP_DIR" "$OLD_APP/"
+fi
 mkdir -p "$APP_DIR/Contents/MacOS" "$APP_DIR/Contents/Resources"
-cp ".build/$CONFIG/Tidemark" "$APP_DIR/Contents/MacOS/Tidemark"
+cp "$BINARY" "$APP_DIR/Contents/MacOS/metr"
 cp Info.plist "$APP_DIR/Contents/Info.plist"
-cp Branding/Tidemark.icns "$APP_DIR/Contents/Resources/Tidemark.icns"
+cp Branding/metr.icns "$APP_DIR/Contents/Resources/metr.icns"
 
 # Ad-hoc signature: enough to run locally and register a login item. Sending it
 # to another Mac needs a Developer ID and notarisation — see README.

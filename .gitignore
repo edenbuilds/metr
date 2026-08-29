@@ -2,6 +2,7 @@
 .swiftpm/
 *.xcodeproj
 .DS_Store
-Tidemark.app/
-Branding/Tidemark.iconset/
+metr.app/
+Branding/metr.iconset/
+release/
 *.zip

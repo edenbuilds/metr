@@ -1,11 +1,11 @@
-# Tidemark — product and UI plan
+# metr — product and UI plan
 
 ## What it is
 
 A calm menu-bar companion that tells you how much of your AI usage window is
 left, when it resets in your timezone, and whether it is safe to keep going.
 
-**Name.** Tidemark: the line showing how high the water reached. Tides also
+**Name.** `metr`: the line showing how high the water reached. Tides also
 carry the idea the app is built on — the level rises, then the window resets.
 
 **Promise.** *Know your headroom.*
@@ -57,7 +57,7 @@ grain, both static, giving a printed quality without a per-frame cost.
 
 ```
 UsageDataSource (protocol)
-├── LocalActivityDataSource   real files on this Mac, no credentials, no network
+├── LocalActivityDataSource   provider quota plus local per-app history
 └── MockUsageDataSource       8 deterministic scenarios, for demo and tests
                               ↓
                         UsageSnapshot
@@ -65,8 +65,8 @@ UsageDataSource (protocol)
             ProviderSnapshot  SessionRecord  DailyActivity
 ```
 
-`TidemarkKit` holds every model and rule and links no UI framework, so all of it
-is testable headlessly. `Tidemark` is presentation only.
+`MetrKit` holds every model and rule and links no UI framework, so all of it
+is testable headlessly. `Metr` is presentation only.
 
 ## Location model
 

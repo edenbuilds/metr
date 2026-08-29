@@ -1,4 +1,4 @@
-# Tidemark — audit of the Usage Pilot prototype
+# metr — audit of the Usage Pilot prototype
 
 Audited by running the original build, not by reading it alone: it was compiled,
 launched, and driven into each of its states with screenshots taken at every

@@ -1,129 +1,94 @@
 <div align="center">
-<img src="Branding/tidemark-icon-1024.png" width="128" alt="Tidemark">
+<img src="Branding/metr-icon-1024.png" width="128" alt="metr">
 
-# Tidemark
+# metr
 
-**Know your headroom.**
+**Your AI, metered.**
 
-A calm macOS menu-bar companion for AI usage windows — how much is left, when it
-resets *in your timezone*, and whether it is safe to keep going.
-
+A quiet native macOS utility for AI quota, reset windows, pace, and local activity.
 </div>
 
----
+## What it answers
 
-## Run it
+In one glance: how much you have used, how much remains, when the window resets, whether your pace is safe, and which provider needs attention.
 
-Requires macOS 13+ and Xcode Command Line Tools.
+- **Side dock** hugs either screen edge and collapses to a 7pt usage rail.
+- **Top bar** sits beneath the menu bar; the menu-bar glyph remains glanceable everywhere.
+- **Both** keeps the side dock plus the menu-bar readout.
+- Provider rows expand for source, context, cost assumptions, and exact reset detail.
+- Weekly detail separates provider-reported limits from per-app local history for Claude Code and Codex.
+- Overview, History, and Insights stay compact and only make claims supported by available data.
+
+## Install
+
+Download `metr-v0.1.0.dmg`, drag `metr.app` to Applications, then open it. This preview is ad-hoc signed rather than notarized, so another Mac may require right-click → Open once.
+
+Build locally on macOS 13+ with Xcode Command Line Tools:
 
 ```bash
-git clone https://github.com/edenbuilds/tidemark.git && cd tidemark
-./build-app.sh && open Tidemark.app
+./build-app.sh
+open metr.app
 ```
 
-Or from source, without a bundle:
-
-```bash
-swift run
-```
+Run tests:
 
 ```bash
 swift test
 ```
 
-> `swift run` has no app bundle, so **launch-at-login and notifications are
-> unavailable** in that mode. Use `./build-app.sh` for the full app.
-
-## Finding it
-
-Tidemark is an accessory app — no Dock icon. It lives in the **menu bar**, and
-its glyph fills up as you use your window.
-
-| Action | How |
-|--------|-----|
-| Show / hide the panel | Click the menu-bar mark |
-| Menu (refresh, minimise, settings, quit) | Right-click the menu-bar mark |
-| Minimise to compact | `Esc`, or the `–` button |
-| Hide entirely | `⌘W`, or the `✕` button — reopen from the menu bar |
-| Refresh | `⌘R` |
-| Switch tabs | `⌘1` `⌘2` `⌘3` |
-| Preferences | `⌘,` |
-| Move it | Drag the header — it snaps to the nearest edge |
-
-Collapsed with auto-hide on, it becomes a **7pt rail on the screen edge**, filled
-to your usage level. Hover to peek, click to open.
-
-## What is real, and what is not
-
-This is the part worth reading.
-
-| Shown | Status |
-|-------|--------|
-| Recent sessions, daily message counts | **Measured.** Read from files the Codex and Claude Code CLIs already wrote on this Mac. |
-| Usage percentage (local source) | **Estimated.** No local file publishes your plan's limits, so this is *your activity this window against your own busiest window* — a proxy, labelled as one. |
-| Cost | **Estimated** from a stated token assumption, printed next to the number. Not billing data. |
-| Everything in Demo mode | **Synthetic.** Eight scenarios for trying the interface. |
-
-**There is no provider API integration.** Tidemark makes no network requests at
-all and needs no credentials. It reads:
-
-- `~/.codex/session_index.jsonl`
-- file timestamps under `~/.claude/projects/`
-- `~/.claude/stats-cache.json`
-
-Nothing else, and nothing is sent anywhere.
-
-## Location and privacy
-
-Tidemark **never links CoreLocation**, so it cannot request GPS or Wi-Fi
-positioning. "Location" here means *timezone*, which is what actually improves
-reset timing.
-
-- Follows your Mac's timezone, and notices when it changes.
-- Manual override for travel, with an optional label — so `Asia/Kolkata` can read
-  "Mumbai time".
-- Shows the provider's reset timezone alongside yours when the offsets differ.
-- Quiet hours and day boundaries evaluate in your display timezone, so they
-  travel with you.
-- Preferences → Location has a master off switch and **Clear stored location
-  data**. The only values ever stored are a timezone identifier and a label you
-  typed.
-
-## Development
-
-```
-Sources/TidemarkKit/   models + rules, no UI framework, fully testable
-Sources/Tidemark/      SwiftUI + AppKit presentation
-Tests/                 101 tests
-Tools/make-icons.swift regenerates the icon from the app's own geometry
-```
-
-Environment overrides, for demos and screenshots — they never write to your real
-preferences:
+Create the Universal 2 DMG and ZIP:
 
 ```bash
-UP_SCENARIO=atLimit UP_PREFS='{"dataSource":"mock","mode":"top"}' swift run
+./package-release.sh
 ```
 
-`UP_SCENARIO`: `healthy` `approachingLimit` `atLimit` `mixed` `offline`
-`authRequired` `stale` `noData`
+## Data sources
 
-## Known limits
+| Provider | Usage and reset | Local activity | Confidence |
+|---|---|---|---|
+| Codex | `chatgpt.com/backend-api/wham/usage`, using the access token already stored in `~/.codex/auth.json` | `~/.codex/session_index.jsonl` | Provider quota measured; local fallback estimated |
+| Claude Code | `api.anthropic.com/api/oauth/usage`, using Claude Code’s existing read-only OAuth credential | timestamps under `~/.claude/projects/` and `~/.claude/stats-cache.json` | Provider quota measured; local fallback estimated |
 
-- **Ad-hoc signed.** Running it on someone else's Mac trips Gatekeeper — they
-  need to right-click → Open once, or run
-  `xattr -dr com.apple.quarantine Tidemark.app`. Proper distribution needs a
-  Developer ID and notarisation.
-- **No global hotkey.** Registering one requires Accessibility or Input
-  Monitoring permission, which is more than a usage meter should ask for.
-- Session titles for Claude Code come from directory-name decoding, which is
-  lossy for folders containing `-`. Used as a label only.
-- `~/.claude/stats-cache.json` is written periodically and can legitimately be
-  days behind — the History tab says so when it is.
+Credentials are sent only to their own provider endpoint. metr never refreshes, rewrites, stores, or uploads provider credentials. If an endpoint or credential is unavailable, metr says so or keeps an explicitly labelled local activity estimate; it never fabricates 0% usage.
 
-## Credits
+## Privacy and timezone
 
-Interaction lineage: the original Usage Pilot prototype, and product research
-from [ericjypark/codex-island](https://github.com/ericjypark/codex-island).
-Audit of the prototype: [`docs/AUDIT.md`](docs/AUDIT.md). Plan:
-[`docs/PLAN.md`](docs/PLAN.md).
+metr is local-first and has no server or telemetry. The only external requests are the two provider usage endpoints above. Session transcript content is never read; only small indexes, timestamps, and provider-generated activity summaries are used.
+
+Reset times use `TimeZone.autoupdatingCurrent` and follow macOS automatically. There is no GPS permission, city label, or timezone selector.
+
+## Native behavior
+
+- SwiftUI presentation with an AppKit non-activating panel
+- Multiple Spaces/full-screen auxiliary behavior
+- Magnetic edge snapping and persisted position
+- System/Light/Dark appearance
+- Reduce Motion support and semantic accessibility labels
+- Launch at Login via `SMAppService`
+- Deduplicated threshold notifications
+- Efficient refresh timers with tolerance and local countdown updates
+
+## Architecture
+
+```text
+Sources/MetrKit/   provider adapters, models, reset math, alerts, history logic
+Sources/Metr/      SwiftUI views, glyph, AppKit panel and menu-bar lifecycle
+Tests/             107 deterministic tests and provider response fixtures
+```
+
+Demo scenarios are available without touching real preferences:
+
+```bash
+METR_SCENARIO=atLimit METR_PREFS='{"dataSource":"mock","mode":"side"}' swift run metr
+```
+
+Scenarios: `healthy`, `approachingLimit`, `atLimit`, `mixed`, `offline`, `authRequired`, `stale`, `noData`.
+
+## Known limitations
+
+- This preview is not Developer ID signed or notarized because no valid signing identity is installed.
+- Provider endpoints and credential formats are provider-controlled and may change.
+- Claude’s usage endpoint can rate-limit; metr reports that state and retains honest local activity rather than inventing quota.
+- Context budget is shown only when a trustworthy source supplies it.
+
+MIT licensed. Interaction research includes [codex-island](https://github.com/ericjypark/codex-island); implementation and brand assets are original.
