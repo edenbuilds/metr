@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.0 — 2026-08-30
+
+- Tightened expanded geometry into a compact, bounded popover with a sleek scroll region.
+- Made the side placement default to the right-top glance zone, preserving deliberate repositioning.
+- Added bundled theSVG provider marks for Claude Code, Codex, and Cursor.
+- Added Cursor as an honest, unavailable provider until a trustworthy quota source exists.
+
 ## 0.2.0 — 2026-08-30
 
 - Replaced the minimized edge line with an adaptive side/top provider dock with ring meters, hover feedback, accessible actions, and spring motion.

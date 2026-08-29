@@ -13,7 +13,7 @@ let package = Package(
         // Data model + logic. No AppKit/SwiftUI, so it is testable headlessly.
         .target(name: "MetrKit"),
         // Presentation layer only.
-        .executableTarget(name: "Metr", dependencies: ["MetrKit"]),
+        .executableTarget(name: "Metr", dependencies: ["MetrKit"], resources: [.process("Resources")]),
         // Tiny stdin-to-local-snapshot bridge for Claude Code's official
         // statusLine hook. It has no UI and never handles credentials.
         .executableTarget(name: "MetrStatusline"),

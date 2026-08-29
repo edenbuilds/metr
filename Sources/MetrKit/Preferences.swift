@@ -144,7 +144,7 @@ public struct Preferences: Equatable, Codable, Sendable {
     /// Provider ids the user has hidden.
     public var hiddenProviderIDs: Set<String> = []
     /// Position along the docked edge, 0 = start, 1 = end. Persisted after a drag.
-    public var edgeOffset: Double = 0.5
+    public var edgeOffset: Double = 0.06
 
     public init() {}
 

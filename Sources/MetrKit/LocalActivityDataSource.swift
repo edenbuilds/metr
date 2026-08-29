@@ -74,6 +74,14 @@ public final class LocalActivityDataSource: UsageDataSource {
             now: now,
             missingReason: "No ~/.codex/session_index.jsonl on this Mac."
         ))
+        providers.append(ProviderSnapshot(
+            identity: KnownProvider.cursor,
+            model: nil,
+            state: .unavailable(reason: "Cursor does not expose a trustworthy local plan-limit feed."),
+            window: UsageWindow(cadence: .rolling(hours: 5), timeZone: .current),
+            confidence: .measured,
+            sourceDescription: "Cursor is shown as available to configure, but metr does not invent quota from editor telemetry."
+        ))
 
         async let codexQuota = ProviderQuotaClient.fetchCodex(home: home, now: now)
         async let claudeQuota = ProviderQuotaClient.fetchClaude(home: home, now: now)

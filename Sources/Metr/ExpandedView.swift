@@ -68,7 +68,9 @@ struct ExpandedView: View {
                 }
             }
         }
-        .frame(maxHeight: max(120, metrics.maxContentHeight - 230))
+        // Keep the expanded panel a compact popover. A bounded scroll region is
+        // more native than allowing the window to become screen-height tall.
+        .frame(maxHeight: min(390, max(150, metrics.maxContentHeight - 230)))
         .scrollDisabledIfPossible(false)
     }
 }

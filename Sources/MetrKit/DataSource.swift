@@ -23,6 +23,7 @@ public protocol UsageDataSource: AnyObject {
 public enum KnownProvider {
     public static let claude = ProviderIdentity(id: "claude", name: "Claude Code", tintName: "orange")
     public static let codex = ProviderIdentity(id: "codex", name: "Codex", tintName: "indigo")
+    public static let cursor = ProviderIdentity(id: "cursor", name: "Cursor", tintName: "mint")
 
-    public static let all = [claude, codex]
+    public static let all = [claude, codex, cursor]
 }

@@ -41,6 +41,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         // Keep the reported login-item state honest at launch: the user may have
         // revoked it in System Settings since we last stored it.
         store.preferences.launchAtLogin = LoginItem.isEnabled
+        // 0.3 keeps the side presentation in the natural right-top glance zone
+        // for existing installs, while preserving any deliberate repositioning.
+        if store.preferences.mode != .top,
+           store.preferences.edge == .trailing,
+           abs(store.preferences.edgeOffset - 0.5) < 0.001 {
+            store.preferences.edgeOffset = 0.06
+        }
 
         panelController = PanelController(store: store, motion: motion)
 

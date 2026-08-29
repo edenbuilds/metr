@@ -207,7 +207,7 @@ final class PanelController: NSObject, NSWindowDelegate {
         let visible = screen.visibleFrame
 
         // Leave room for the panel's own margins plus a little breathing space.
-        metrics.maxContentHeight = max(200, visible.height - (Theme.shadowMargin * 2) - 24)
+        metrics.maxContentHeight = min(620, max(420, visible.height - (Theme.shadowMargin * 2) - 24))
 
         let frame = isRailed
             ? railFrame(in: visible)

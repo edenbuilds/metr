@@ -289,9 +289,7 @@ struct RailView: View {
             Circle().trim(from: 0, to: CGFloat(min(1, max(0, fraction))))
                 .stroke(tint, style: StrokeStyle(lineWidth: 3, lineCap: .round))
                 .rotationEffect(.degrees(-90))
-            Image(systemName: provider.identity.id == "claude" ? "sparkles" : "terminal")
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(tint)
+            ProviderLogo(identity: provider.identity)
         }
         .frame(width: 30, height: 30)
     }

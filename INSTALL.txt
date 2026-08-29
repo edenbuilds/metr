@@ -1,4 +1,4 @@
-metr 0.2.0
+metr 0.3.0
 
 1. Open the DMG and drag metr.app to Applications.
 2. Open metr from Applications.
