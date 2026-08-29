@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.0 — 2026-08-30
+
+- Added a stable hover status card with Used / Remaining display preference.
+- Added explicit rail drag handle and native drag-to-snap behavior.
+- Replaced Claude Code/Codex marks with bundled Anthropic/OpenAI SVG marks from theSVG.
+- Added the supplied cat mark as the adaptive metr brand logo and menu-bar glyph.
+- Consolidated the menu bar around one always-on native status item.
+
 ## 0.4.7 — 2026-08-30
 
 - Made the native menu-bar label text-backed with a visible drop glyph and metr name so it remains discoverable even when custom status-item artwork is elided by macOS.

@@ -138,14 +138,16 @@ struct HeaderView: View {
     private var mark: some View {
         let status = store.headerStatus
         let level = store.focusProvider?.usedFraction ?? 0.15
-        return MetrMark(
-            level: status.isKnown ? level : 0.1,
-            severity: status.severity,
-            isKnown: status.isKnown,
-            foreground: Brand.bone,
-            background: Brand.charcoal,
-            phase: wavePhase
-        )
+        return ZStack(alignment: .bottomTrailing) {
+            MetrCatLogo(size: 34)
+            if status.isKnown {
+                Circle()
+                    .trim(from: 0, to: CGFloat(min(1, max(0, level))))
+                    .stroke(Theme.color(for: status.severity), style: StrokeStyle(lineWidth: 2, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+                    .padding(1)
+            }
+        }
         .frame(width: 34, height: 34)
         .attentionPulse(status.isKnown && status.severity == .critical)
         .help("\(Brand.name) — \(status.label)")
@@ -244,9 +246,15 @@ struct RailView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .contentShape(Rectangle())
-        .onHover { hovering in
-            withAnimation(motion.accent) { self.hovering = hovering }
-            actions.setRailHover(hovering)
+        .onContinuousHover { phase in
+            switch phase {
+            case .active:
+                withAnimation(motion.accent) { self.hovering = true }
+                actions.setRailHover(true)
+            case .ended:
+                withAnimation(motion.accent) { self.hovering = false }
+                actions.setRailHover(false)
+            }
         }
         .animation(motion.accent, value: hovering)
         .accessibilityElement()
@@ -268,12 +276,25 @@ struct RailView: View {
         .clipShape(Capsule())
         .overlay(Capsule().strokeBorder(Color.primary.opacity(0.14), lineWidth: 0.5))
         .shadow(color: .black.opacity(hovering ? 0.28 : 0.2), radius: hovering ? 16 : 10, y: 4)
+        .overlay(alignment: isVertical ? .top : .leading) {
+            Capsule()
+                .fill(Color.primary.opacity(0.28))
+                .frame(width: isVertical ? 3 : 24, height: isVertical ? 24 : 3)
+                .padding(isVertical ? .top : .leading, 8)
+                .help("Drag to move metr")
+                .accessibilityLabel("Drag to move metr dock")
+        }
         // Track the real control surface as well as the surrounding window.
         // This keeps hover reliable while the panel grows to reveal the peek.
         .onHover { value in
             withAnimation(motion.accent) { hovering = value }
             actions.setRailHover(value)
         }
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 5)
+                .onChanged { value in actions.dragRailChanged(value.translation) }
+                .onEnded { _ in actions.dragRailEnded() }
+        )
     }
 
     @ViewBuilder
@@ -281,7 +302,9 @@ struct RailView: View {
         if let provider = hoveredProvider.flatMap({ id in store.visibleProviders.first { $0.id == id } }) ?? store.focusProvider {
             let fraction = provider.usedFraction
             let reset = store.resetDescription(for: provider)
-            let spokenFraction = fraction.map(Formatters.percent) ?? "unknown"
+            let showsRemaining = store.preferences.usageDisplay == .remaining
+            let displayFraction = fraction.map { showsRemaining ? 1 - $0 : $0 }
+            let spokenFraction = displayFraction.map(Formatters.percent) ?? "unknown"
             VStack(alignment: .leading, spacing: Theme.Space.snug) {
                 HStack(spacing: Theme.Space.snug) {
                     ProviderLogo(identity: provider.identity, size: 18)
@@ -290,9 +313,10 @@ struct RailView: View {
                     Text(provider.state.label).font(Theme.Text.fine).foregroundStyle(.secondary)
                 }
                 HStack(alignment: .firstTextBaseline) {
-                    Text(fraction.map(Formatters.percent) ?? "—")
+                    Text(displayFraction.map(Formatters.percent) ?? "—")
                         .font(Theme.Text.metricLarge)
-                    Text("used").font(Theme.Text.captionTight).foregroundStyle(.secondary)
+                    Text(showsRemaining ? "remaining" : "used")
+                        .font(Theme.Text.captionTight).foregroundStyle(.secondary)
                     Spacer()
                     if let resetAt = provider.quotaPeriods.first?.resetAt {
                         Text("Resets \(Formatters.countdown(resetAt.timeIntervalSince(store.now)))")
@@ -301,7 +325,7 @@ struct RailView: View {
                     }
                 }
                 Meter(
-                    fraction: fraction ?? 0,
+                    fraction: displayFraction ?? 0,
                     tint: Theme.tint(provider.identity.tintName),
                     severity: provider.severity(thresholds: store.preferences.thresholds),
                     thresholds: store.preferences.thresholds,
@@ -326,7 +350,7 @@ struct RailView: View {
             .transition(motion.reduceMotion ? .opacity : .scale(scale: 0.96, anchor: store.preferences.edge == .trailing ? .trailing : .leading).combined(with: .opacity))
             .accessibilityElement(children: .combine)
             .accessibilityLabel("Quick \(provider.identity.name) status")
-            .accessibilityValue("\(spokenFraction) used. \(reset.primary). \(reset.countdown).")
+            .accessibilityValue("\(spokenFraction) \(showsRemaining ? "remaining" : "used"). \(reset.primary). \(reset.countdown).")
         }
     }
 

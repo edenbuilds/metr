@@ -39,6 +39,15 @@ struct PreferencesView: View {
             Picker("Compact shows", selection: $store.preferences.compactMetric) {
                 ForEach(CompactMetric.allCases, id: \.self) { Text($0.title).tag($0) }
             }
+            if store.preferences.compactMetric == .percentUsed {
+                Picker("Percentage means", selection: $store.preferences.usageDisplay) {
+                    ForEach(UsageDisplay.allCases, id: \.self) { Text($0.title).tag($0) }
+                }
+                Text("Choose whether the compact dock reports what you have used or what remains in the current window.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
 
             Divider()
 

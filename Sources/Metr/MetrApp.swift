@@ -22,10 +22,11 @@ struct MetrApp: App {
             Button("Preferences…") { appDelegate.showPreferencesFromMenuBar() }
             Button("Quit metr") { NSApp.terminate(nil) }
         } label: {
-            // MenuBarExtra's native label is deliberately text-backed: macOS
-            // can elide a custom SwiftUI drawing in a crowded menu bar, while
-            // this keeps the product name and glyph discoverable at all times.
-            Label("metr", systemImage: "drop.fill")
+            Label {
+                Text("metr")
+            } icon: {
+                MetrCatLogo(size: 16)
+            }
         }
         Settings { EmptyView() }
     }
@@ -70,20 +71,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             self.motion.userReducesMotion = new.reduceMotionOverride
             self.applyAppearance(new.appearance)
             self.panelController.preferencesChanged(from: old)
-            self.updateStatusItem()
         }
         store.onAlerts = { [weak self] alerts in
             self?.deliver(alerts)
         }
 
-        buildStatusItem()
-        observeUsageStatus()
         installKeyMonitor()
         requestNotificationAuthorizationIfNeeded()
 
         store.start()
         panelController.show()
-        updateStatusItem()
 
         // Reflect the preferences flag the panel raises.
         observePreferencesRequests()

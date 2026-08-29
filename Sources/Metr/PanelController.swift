@@ -59,6 +59,7 @@ final class PanelController: NSObject, NSWindowDelegate {
     private var isProgrammaticMove = false
     private var snapWorkItem: DispatchWorkItem?
     private var autoHideWorkItem: DispatchWorkItem?
+    private var railDragOrigin: NSPoint?
 
     /// True when the panel is showing only its edge rail.
     private var isRailed: Bool {
@@ -104,6 +105,8 @@ final class PanelController: NSObject, NSWindowDelegate {
             .environment(\.panelActions, PanelActions(
                 setExpanded: { [weak self] expanded in self?.setExpanded(expanded) },
                 setRailHover: { [weak self] hovering in self?.setRailHover(hovering) },
+                dragRailChanged: { [weak self] translation in self?.dragRailChanged(translation) },
+                dragRailEnded: { [weak self] in self?.dragRailEnded() },
                 reportHeight: { [weak self] height in self?.updateContentHeight(height) },
                 close: { [weak self] in self?.hide() }
             ))
@@ -161,6 +164,24 @@ final class PanelController: NSObject, NSWindowDelegate {
         guard metrics.railHovered != hovering else { return }
         metrics.railHovered = hovering
         layout(animated: true)
+    }
+
+    private func dragRailChanged(_ translation: CGSize) {
+        if railDragOrigin == nil {
+            railDragOrigin = panel.frame.origin
+            metrics.isDragging = true
+            snapWorkItem?.cancel()
+        }
+        guard let origin = railDragOrigin else { return }
+        isProgrammaticMove = true
+        panel.setFrameOrigin(NSPoint(x: origin.x + translation.width, y: origin.y - translation.height))
+        isProgrammaticMove = false
+    }
+
+    private func dragRailEnded() {
+        guard railDragOrigin != nil else { return }
+        railDragOrigin = nil
+        snapToEdge()
     }
 
     /// Called by the SwiftUI layer whenever its measured height changes.
@@ -383,6 +404,8 @@ final class PanelController: NSObject, NSWindowDelegate {
 struct PanelActions {
     var setExpanded: (Bool) -> Void = { _ in }
     var setRailHover: (Bool) -> Void = { _ in }
+    var dragRailChanged: (CGSize) -> Void = { _ in }
+    var dragRailEnded: () -> Void = {}
     var reportHeight: (CGFloat) -> Void = { _ in }
     var close: () -> Void = {}
 }

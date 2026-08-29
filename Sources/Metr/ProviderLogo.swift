@@ -11,6 +11,14 @@ struct ProviderLogo: View {
 
     private static var cache: [String: NSImage] = [:]
 
+    private var assetID: String {
+        switch identity.id {
+        case "claude": return "anthropic"
+        case "codex": return "openai"
+        default: return identity.id
+        }
+    }
+
     var body: some View {
         Group {
             if let image = loadImage() {
@@ -28,13 +36,13 @@ struct ProviderLogo: View {
     }
 
     private func loadImage() -> NSImage? {
-        if let cached = Self.cache[identity.id] { return cached }
+        if let cached = Self.cache[assetID] { return cached }
         let url = Bundle.module.url(
-            forResource: identity.id,
+            forResource: assetID,
             withExtension: "svg",
             subdirectory: "ProviderLogos"
         ) ?? Bundle.module.url(
-            forResource: identity.id,
+            forResource: assetID,
             withExtension: "svg"
         )
         guard let url, let image = NSImage(contentsOf: url) else {
@@ -71,7 +79,7 @@ struct ProviderLogo: View {
         let rendered = NSImage(size: canvas)
         rendered.addRepresentation(bitmap)
         rendered.isTemplate = true
-        Self.cache[identity.id] = rendered
+        Self.cache[assetID] = rendered
         return rendered
     }
 }

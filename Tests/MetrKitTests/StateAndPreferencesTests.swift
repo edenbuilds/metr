@@ -56,6 +56,7 @@ final class StateAndPreferencesTests: XCTestCase {
         var prefs = Preferences()
         prefs.mode = .both
         prefs.appearance = .dark
+        prefs.usageDisplay = .remaining
         prefs.hiddenProviderIDs = ["codex"]
         prefs.thresholds = AlertThresholds(watch: 0.5, critical: 0.7)
         store.save(prefs)
@@ -63,6 +64,7 @@ final class StateAndPreferencesTests: XCTestCase {
         let loaded = PreferencesStore(defaults: defaults).load()
         XCTAssertEqual(loaded.mode, .both)
         XCTAssertEqual(loaded.appearance, .dark)
+        XCTAssertEqual(loaded.usageDisplay, .remaining)
         XCTAssertEqual(loaded.hiddenProviderIDs, ["codex"])
         XCTAssertEqual(loaded.thresholds.watch, 0.5, accuracy: 0.001)
     }
