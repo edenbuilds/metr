@@ -354,7 +354,9 @@ public final class UsageStore: ObservableObject {
     public func compactValue(for provider: ProviderSnapshot) -> String {
         switch preferences.compactMetric {
         case .percentUsed:
-            return provider.usedFraction.map { Formatters.percent($0) } ?? "—"
+            return provider.usedFraction.map {
+                Formatters.percent(preferences.usageDisplay == .remaining ? 1 - $0 : $0)
+            } ?? "—"
         case .timeToReset:
             return Formatters.countdown(provider.window.nextReset(after: now).timeIntervalSince(now))
         case .contextLeft:

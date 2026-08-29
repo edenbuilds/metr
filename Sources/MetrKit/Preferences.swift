@@ -47,6 +47,18 @@ public enum CompactMetric: String, CaseIterable, Codable, Sendable {
     }
 }
 
+/// Whether percentage readouts describe consumption or available allowance.
+public enum UsageDisplay: String, CaseIterable, Codable, Sendable {
+    case used, remaining
+
+    public var title: String {
+        switch self {
+        case .used: return "Used"
+        case .remaining: return "Remaining"
+        }
+    }
+}
+
 public enum PanelWidth: String, CaseIterable, Codable, Sendable {
     case compact, standard, wide
 
@@ -135,6 +147,7 @@ public struct Preferences: Equatable, Codable, Sendable {
     public var appearance: AppearanceMode = .system
     public var refresh: RefreshCadence = .normal
     public var compactMetric: CompactMetric = .percentUsed
+    public var usageDisplay: UsageDisplay = .used
     public var thresholds: AlertThresholds = .default
     public var quietHours: QuietHours = .default
     public var alertsEnabled: Bool = true
@@ -169,6 +182,7 @@ public struct Preferences: Equatable, Codable, Sendable {
         appearance = value(.appearance, defaults.appearance)
         refresh = value(.refresh, defaults.refresh)
         compactMetric = value(.compactMetric, defaults.compactMetric)
+        usageDisplay = value(.usageDisplay, defaults.usageDisplay)
         thresholds = value(.thresholds, defaults.thresholds)
         quietHours = value(.quietHours, defaults.quietHours)
         alertsEnabled = value(.alertsEnabled, defaults.alertsEnabled)
