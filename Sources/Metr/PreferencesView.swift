@@ -72,7 +72,7 @@ struct PreferencesView: View {
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
-            GroupBox("Claude Code") {
+            GroupBox("Claude") {
                 VStack(alignment: .leading, spacing: Theme.Space.snug) {
                     Text("Claude limits are read from its official statusLine payload and shown as measured only when a fresh five-hour or seven-day limit is available. Claude Desktop activity remains available as local history.")
                         .font(.caption)

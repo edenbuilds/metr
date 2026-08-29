@@ -93,15 +93,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     // MARK: Status item
 
     private func buildStatusItem() {
-        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        statusItem = NSStatusBar.system.statusItem(withLength: 22)
         statusItem.behavior = []          // never let a drag remove it from the menu bar
         statusItem.isVisible = true
         guard let button = statusItem.button else { return }
-        statusItem.length = NSStatusItem.squareLength
+        statusItem.length = 22
         button.imagePosition = .imageOnly
         button.imageScaling = .scaleProportionallyUpOrDown
-        button.image = MenuBarIcon.image(level: 0.15, severity: .nominal, isKnown: false)
-        button.image?.isTemplate = true
+        button.image = NSImage(named: NSImage.applicationIconName)
+            ?? MenuBarIcon.image(level: 0.15, severity: .nominal, isKnown: false)
+        button.image?.size = NSSize(width: 18, height: 18)
+        button.image?.isTemplate = false
         // A target/action on the status button means Return activates it during
         // full keyboard navigation, not just a mouse click.
         button.target = self
@@ -118,12 +120,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         button.title = ""
         // The menu-bar glyph fills with the same level the panel shows, so the
         // menu bar alone tells you where you stand.
-        button.image = MenuBarIcon.image(
-            level: store.focusProvider?.usedFraction ?? 0.15,
-            severity: status.severity,
-            isKnown: status.isKnown
-        )
-        button.image?.isTemplate = true
+        button.image = NSImage(named: NSImage.applicationIconName)
+            ?? MenuBarIcon.image(
+                level: store.focusProvider?.usedFraction ?? 0.15,
+                severity: status.severity,
+                isKnown: status.isKnown
+            )
+        button.image?.size = NSSize(width: 18, height: 18)
+        button.image?.isTemplate = false
         button.toolTip = "\(Brand.name) — \(status.label)"
         button.setAccessibilityLabel("metr, \(status.label)")
     }
@@ -161,8 +165,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 let offsets: [Double] = [0, 0.04, 0.08, 0.04]
                 let status = self.store.headerStatus
                 let level = min(1, (self.store.focusProvider?.usedFraction ?? 0.15) + offsets[self.statusWaveStep % offsets.count])
-                button.image = MenuBarIcon.image(level: level, severity: status.severity, isKnown: status.isKnown)
-                button.image?.isTemplate = true
+                button.image = NSImage(named: NSImage.applicationIconName)
+                    ?? MenuBarIcon.image(level: level, severity: status.severity, isKnown: status.isKnown)
+                button.image?.size = NSSize(width: 18, height: 18)
+                button.image?.isTemplate = false
                 self.statusWaveStep += 1
             }
         }

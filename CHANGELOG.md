@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.2 — 2026-08-30
+
+- Rasterized bundled SVG marks into stable AppKit representations so provider logos remain visible in SwiftUI docks and cards across macOS releases and themes.
+- Made the menu-bar item use the metr application mark when available, ensuring a visible branded glyph instead of an empty status slot.
+- Added the Claude unified rate-limit-header fallback described by the CodeZeno monitor for accounts where the dedicated usage endpoint is unavailable.
+
+## 0.4.1 — 2026-08-30
+
+- Fixed provider SVG marks not appearing reliably by loading the bundled vector resources synchronously with a cache.
+- Fixed hover detection by tracking the dock surface directly while the bounded quick-status card animates into place.
+- Strengthened the custom menu-bar glyph and made its status item a fixed, always-visible 22-point slot.
+
 ## 0.4.0 — 2026-08-30
 
 - Added a compact hover peek with the active usage percentage, reset countdown, weekly window, and a clear measured-versus-estimated label.

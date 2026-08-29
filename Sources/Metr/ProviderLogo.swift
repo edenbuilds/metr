@@ -9,11 +9,11 @@ struct ProviderLogo: View {
     let identity: ProviderIdentity
     var size: CGFloat = 15
 
-    @State private var image: NSImage?
+    private static var cache: [String: NSImage] = [:]
 
     var body: some View {
         Group {
-            if let image {
+            if let image = loadImage() {
                 Image(nsImage: image)
                     .renderingMode(.template)
                     .resizable()
@@ -25,24 +25,44 @@ struct ProviderLogo: View {
         }
         .frame(width: size, height: size)
         .accessibilityHidden(true)
-        .task(id: identity.id) {
-            image = loadImage()
-        }
     }
 
     private func loadImage() -> NSImage? {
+        if let cached = Self.cache[identity.id] { return cached }
         guard let url = Bundle.module.url(
             forResource: identity.id,
             withExtension: "svg",
             subdirectory: "ProviderLogos"
-        ), let data = try? Data(contentsOf: url), let image = NSImage(data: data) else {
+        ), let image = NSImage(contentsOf: url) else {
             return nil
         }
-        // SVGs can arrive without an intrinsic point size. Giving AppKit a
-        // stable representation size prevents a blank or 1-point mark while
-        // SwiftUI is resolving the bundled resource asynchronously.
-        image.size = NSSize(width: 24, height: 24)
-        image.isTemplate = true
-        return image
+        // SwiftUI can keep an SVG NSImage's vector representation blank on a
+        // few macOS releases. Rasterise the already-bundled SVG once at a
+        // generous scale, then let SwiftUI tint that stable representation.
+        let canvas = NSSize(width: 96, height: 96)
+        guard let bitmap = NSBitmapImageRep(
+            bitmapDataPlanes: nil,
+            pixelsWide: 96,
+            pixelsHigh: 96,
+            bitsPerSample: 8,
+            samplesPerPixel: 4,
+            hasAlpha: true,
+            isPlanar: false,
+            colorSpaceName: .deviceRGB,
+            bitmapFormat: [],
+            bytesPerRow: 0,
+            bitsPerPixel: 0
+        ), let context = NSGraphicsContext(bitmapImageRep: bitmap) else { return nil }
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = context
+        image.draw(in: NSRect(origin: .zero, size: canvas), from: .zero, operation: .sourceOver, fraction: 1)
+        context.flushGraphics()
+        NSGraphicsContext.restoreGraphicsState()
+
+        let rendered = NSImage(size: canvas)
+        rendered.addRepresentation(bitmap)
+        rendered.isTemplate = true
+        Self.cache[identity.id] = rendered
+        return rendered
     }
 }

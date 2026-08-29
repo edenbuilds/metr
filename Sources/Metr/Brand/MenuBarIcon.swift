@@ -28,14 +28,14 @@ enum MenuBarIcon {
         // Water fill, clipped to the vessel interior.
         NSGraphicsContext.saveGraphicsState()
         interior(in: rect).addClip()
-        black.withAlphaComponent(isKnown ? 0.55 : 0.22).setFill()
+        black.withAlphaComponent(isKnown ? 0.82 : 0.48).setFill()
         water(in: rect, level: isKnown ? CGFloat(min(1, max(0, level))) : 0.12).fill()
         NSGraphicsContext.restoreGraphicsState()
 
         // Vessel outline.
         black.setStroke()
         let outline = vessel(in: rect)
-        outline.lineWidth = rect.width * 0.11
+        outline.lineWidth = rect.width * 0.15
         outline.lineCapStyle = .round
         outline.lineJoinStyle = .round
         outline.stroke()

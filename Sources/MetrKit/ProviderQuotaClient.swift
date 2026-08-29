@@ -6,6 +6,7 @@ import Security
 enum ProviderQuotaClient {
     private static let codexUsageURL = URL(string: "https://chatgpt.com/backend-api/wham/usage")!
     private static let claudeUsageURL = URL(string: "https://api.anthropic.com/api/oauth/usage")!
+    private static let claudeMessagesURL = URL(string: "https://api.anthropic.com/v1/messages")!
 
     static func fetchCodex(home: URL, now: Date) async -> ProviderSnapshot? {
         guard let token = codexAccessToken(home: home) else { return nil }
@@ -67,6 +68,14 @@ enum ProviderQuotaClient {
             if http.statusCode == 429 {
                 return failure(identity: KnownProvider.claude, reason: "Claude usage is temporarily rate limited.", now: now)
             }
+            // Some Claude accounts do not expose the dedicated OAuth usage
+            // endpoint. A one-token Messages request can still return the
+            // authoritative unified rate-limit headers without scraping the
+            // desktop app or guessing from local transcripts.
+            if [404, 405, 422].contains(http.statusCode),
+               let headerReading = await fetchClaudeRateLimitHeaders(token: credentials.token, now: now) {
+                return headerReading
+            }
             guard http.statusCode == 200,
                   let object = try JSONSerialization.jsonObject(with: data) as? [String: Any],
                   let reading = parseClaudeWindow(object["five_hour"], label: "5-hour window", span: 5 * 3600)
@@ -85,6 +94,62 @@ enum ProviderQuotaClient {
         } catch {
             return failure(identity: KnownProvider.claude, reason: "Claude usage refresh failed: \(error.localizedDescription)", now: now)
         }
+    }
+
+    private static func fetchClaudeRateLimitHeaders(token: String, now: Date) async -> ProviderSnapshot? {
+        var request = URLRequest(url: claudeMessagesURL)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
+        request.setValue("oauth-2025-04-20", forHTTPHeaderField: "anthropic-beta")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("claude-code/2.1.121", forHTTPHeaderField: "User-Agent")
+        request.httpBody = try? JSONSerialization.data(withJSONObject: [
+            "model": "claude-3-haiku-20240307",
+            "max_tokens": 1,
+            "messages": [["role": "user", "content": "."]]
+        ])
+
+        do {
+            let (_, response) = try await URLSession.shared.data(for: request)
+            guard let http = response as? HTTPURLResponse else { return nil }
+            if http.statusCode == 401 || http.statusCode == 403 { return nil }
+
+            let session = parseClaudeHeaderWindow(http, prefix: "5h", label: "5-hour window", span: 5 * 3600)
+            let weekly = parseClaudeHeaderWindow(http, prefix: "7d", label: "7-day window", span: 7 * 86_400)
+            let periods = [session, weekly].compactMap { $0 }
+            guard let reading = periods.first else { return nil }
+            return snapshot(
+                identity: KnownProvider.claude,
+                plan: nil,
+                reading: reading,
+                periods: periods,
+                now: now,
+                source: "Provider-reported unified rate-limit headers from api.anthropic.com/v1/messages."
+            )
+        } catch {
+            return nil
+        }
+    }
+
+    private static func parseClaudeHeaderWindow(
+        _ response: HTTPURLResponse,
+        prefix: String,
+        label: String,
+        span: TimeInterval
+    ) -> WindowReading? {
+        let utilization = response.value(forHTTPHeaderField: "anthropic-ratelimit-unified-\(prefix)-utilization")
+            .flatMap(Double.init)
+        let reset = response.value(forHTTPHeaderField: "anthropic-ratelimit-unified-\(prefix)-reset")
+            .flatMap(Double.init)
+            .map(Date.init(timeIntervalSince1970:))
+        guard let utilization else { return nil }
+        return WindowReading(
+            fraction: min(1, max(0, utilization)),
+            resetAt: reset,
+            span: span,
+            label: label
+        )
     }
 
     struct WindowReading: Equatable {

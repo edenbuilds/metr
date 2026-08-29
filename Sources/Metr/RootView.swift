@@ -268,6 +268,12 @@ struct RailView: View {
         .clipShape(Capsule())
         .overlay(Capsule().strokeBorder(Color.primary.opacity(0.14), lineWidth: 0.5))
         .shadow(color: .black.opacity(hovering ? 0.28 : 0.2), radius: hovering ? 16 : 10, y: 4)
+        // Track the real control surface as well as the surrounding window.
+        // This keeps hover reliable while the panel grows to reveal the peek.
+        .onHover { value in
+            withAnimation(motion.accent) { hovering = value }
+            actions.setRailHover(value)
+        }
     }
 
     @ViewBuilder
