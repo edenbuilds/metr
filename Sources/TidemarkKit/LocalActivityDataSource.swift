@@ -250,7 +250,7 @@ public final class LocalActivityDataSource: UsageDataSource {
         return records
     }
 
-    /// "-Users-omkar--claude-worktrees-foo-bar" -> "foo bar".
+    /// "-Users-alex--projects-foo-bar" -> "foo bar".
     static func projectTitle(fromSlug slug: String) -> String {
         let path = projectPath(fromSlug: slug)
         let last = path.split(separator: "/").last.map(String.init) ?? slug

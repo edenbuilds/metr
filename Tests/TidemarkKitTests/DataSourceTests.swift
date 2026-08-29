@@ -50,12 +50,12 @@ final class DataSourceTests: XCTestCase {
 
     func testProjectSlugDecodesToAPathAndTitle() {
         XCTAssertEqual(
-            LocalActivityDataSource.projectPath(fromSlug: "-Users-omkar-shb-case-manager"),
-            "/Users/omkar/shb/case/manager"
+            LocalActivityDataSource.projectPath(fromSlug: "-Users-alex-my-side-project"),
+            "/Users/alex/my/side/project"
         )
         XCTAssertEqual(
-            LocalActivityDataSource.projectTitle(fromSlug: "-Users-omkar-overwater"),
-            "overwater"
+            LocalActivityDataSource.projectTitle(fromSlug: "-Users-alex-notebook"),
+            "notebook"
         )
     }
 
