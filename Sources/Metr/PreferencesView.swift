@@ -72,6 +72,19 @@ struct PreferencesView: View {
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
+            GroupBox("Claude Code") {
+                VStack(alignment: .leading, spacing: Theme.Space.snug) {
+                    Text("Claude Code limits are read from its official statusLine payload and shown as measured only when a fresh five-hour or seven-day limit is available. Claude Desktop conversations remain available as local history.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text("If limits show as unavailable, run configure-claude-statusline.sh once from the metr source folder, then use Claude Code again.")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+
             Divider()
 
             Picker("Refresh", selection: $store.preferences.refresh) {

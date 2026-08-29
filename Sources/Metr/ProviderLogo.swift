@@ -7,18 +7,21 @@ import MetrKit
 /// the dock stays offline, crisp, and deterministic at every scale.
 struct ProviderLogo: View {
     let identity: ProviderIdentity
+    var size: CGFloat = 15
 
     var body: some View {
         Group {
             if let image = loadImage() {
                 Image(nsImage: image)
+                    .renderingMode(.template)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
+                    .foregroundStyle(.primary.opacity(0.88))
             } else {
                 Color.clear
             }
         }
-        .frame(width: 15, height: 15)
+        .frame(width: size, height: size)
         .accessibilityHidden(true)
     }
 

@@ -35,6 +35,11 @@ struct HistoryTab: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Space.base) {
             providerPicker
+            Text(selectedID == KnownProvider.claude.id ? "Claude conversations" : "Detailed history")
+                .font(Theme.Text.captionTight.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .textCase(.uppercase)
+                .tracking(0.8)
             weeklySummary
 
             if recent.isEmpty {
@@ -63,7 +68,8 @@ struct HistoryTab: View {
         )) {
             Text("All").tag("all")
             ForEach(store.visibleProviders) { provider in
-                Text(provider.identity.name).tag(provider.id)
+                Text(provider.id == KnownProvider.claude.id ? "Claude conversations" : provider.identity.name)
+                    .tag(provider.id)
             }
         }
         .pickerStyle(.segmented)
@@ -220,7 +226,8 @@ struct HistoryTab: View {
         Card {
             VStack(alignment: .leading, spacing: Theme.Space.snug) {
                 HStack {
-                    Text("Recent sessions").font(Theme.Text.heading)
+                    Text(selectedID == KnownProvider.claude.id ? "Recent Claude conversations" : "Recent sessions")
+                        .font(Theme.Text.heading)
                     Spacer()
                     Text("\(filteredSessions.count)")
                         .font(Theme.Text.captionTight.monospacedDigit())

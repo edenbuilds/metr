@@ -30,6 +30,11 @@ struct OverviewTab: View {
                     )
                 }
             } else {
+                Text("Live limits")
+                    .font(Theme.Text.captionTight.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .textCase(.uppercase)
+                    .tracking(0.8)
                 ForEach(store.visibleProviders) { provider in
                     ProviderCard(provider: provider)
                 }
@@ -128,10 +133,7 @@ struct ProviderCard: View {
 
     private var header: some View {
         HStack(spacing: Theme.Space.snug) {
-            Circle()
-                .fill(Theme.tint(provider.identity.tintName))
-                .frame(width: 8, height: 8)
-                .accessibilityHidden(true)
+            ProviderLogo(identity: provider.identity, size: 18)
             Text(provider.identity.name)
                 .font(Theme.Text.heading)
             if let model = provider.model {
@@ -162,6 +164,15 @@ struct ProviderCard: View {
 
             if case .authenticationRequired = provider.state {
                 Button("How to connect this provider") { store.isShowingPreferences = true }
+                    .buttonStyle(.link)
+                    .font(Theme.Text.captionTight)
+            }
+            if provider.id == KnownProvider.claude.id && provider.confidence == .estimated {
+                Text("Claude Code limits appear after its official statusLine hook receives a fresh update. Claude conversations are kept separately in History.")
+                    .font(.system(size: 9))
+                    .foregroundStyle(.tertiary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Button("Open data settings") { store.isShowingPreferences = true }
                     .buttonStyle(.link)
                     .font(Theme.Text.captionTight)
             }

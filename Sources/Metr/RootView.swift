@@ -16,7 +16,7 @@ struct RootView: View {
 
     private var isRailed: Bool {
         !store.preferences.expanded && store.preferences.autoHide
-            && !store.preferences.pinned && !metrics.railHovered
+            && !store.preferences.pinned
     }
 
     var body: some View {
@@ -242,7 +242,6 @@ struct RailView: View {
         .contentShape(Rectangle())
         .onHover { hovering in
             withAnimation(motion.accent) { self.hovering = hovering }
-            actions.setRailHover(hovering)
         }
         .animation(motion.accent, value: hovering)
         .accessibilityElement()
@@ -335,9 +334,7 @@ struct CompactView: View {
         let severity = provider.severity(thresholds: store.preferences.thresholds)
         return VStack(alignment: .leading, spacing: 2) {
             HStack(spacing: Theme.Space.tight) {
-                Circle()
-                    .fill(Theme.tint(provider.identity.tintName))
-                    .frame(width: 6, height: 6)
+                ProviderLogo(identity: provider.identity, size: 13)
                 Text(provider.identity.name)
                     .font(Theme.Text.captionTight)
                     .foregroundStyle(.secondary)
