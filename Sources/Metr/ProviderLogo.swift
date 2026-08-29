@@ -9,9 +9,11 @@ struct ProviderLogo: View {
     let identity: ProviderIdentity
     var size: CGFloat = 15
 
+    @State private var image: NSImage?
+
     var body: some View {
         Group {
-            if let image = loadImage() {
+            if let image {
                 Image(nsImage: image)
                     .renderingMode(.template)
                     .resizable()
@@ -23,6 +25,9 @@ struct ProviderLogo: View {
         }
         .frame(width: size, height: size)
         .accessibilityHidden(true)
+        .task(id: identity.id) {
+            image = loadImage()
+        }
     }
 
     private func loadImage() -> NSImage? {
@@ -30,7 +35,14 @@ struct ProviderLogo: View {
             forResource: identity.id,
             withExtension: "svg",
             subdirectory: "ProviderLogos"
-        ) else { return nil }
-        return NSImage(contentsOf: url)
+        ), let data = try? Data(contentsOf: url), let image = NSImage(data: data) else {
+            return nil
+        }
+        // SVGs can arrive without an intrinsic point size. Giving AppKit a
+        // stable representation size prevents a blank or 1-point mark while
+        // SwiftUI is resolving the bundled resource asynchronously.
+        image.size = NSSize(width: 24, height: 24)
+        image.isTemplate = true
+        return image
     }
 }

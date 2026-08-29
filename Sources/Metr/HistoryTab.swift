@@ -35,7 +35,7 @@ struct HistoryTab: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Space.base) {
             providerPicker
-            Text(selectedID == KnownProvider.claude.id ? "Claude conversations" : "Detailed history")
+            Text(selectedID == KnownProvider.claude.id ? "Claude" : "Detailed history")
                 .font(Theme.Text.captionTight.weight(.semibold))
                 .foregroundStyle(.secondary)
                 .textCase(.uppercase)
@@ -68,7 +68,7 @@ struct HistoryTab: View {
         )) {
             Text("All").tag("all")
             ForEach(store.visibleProviders) { provider in
-                Text(provider.id == KnownProvider.claude.id ? "Claude conversations" : provider.identity.name)
+                Text(provider.identity.name)
                     .tag(provider.id)
             }
         }
@@ -226,7 +226,7 @@ struct HistoryTab: View {
         Card {
             VStack(alignment: .leading, spacing: Theme.Space.snug) {
                 HStack {
-                    Text(selectedID == KnownProvider.claude.id ? "Recent Claude conversations" : "Recent sessions")
+                    Text(selectedID == KnownProvider.claude.id ? "Recent Claude activity" : "Recent sessions")
                         .font(Theme.Text.heading)
                     Spacer()
                     Text("\(filteredSessions.count)")

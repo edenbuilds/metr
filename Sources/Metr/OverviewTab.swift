@@ -168,7 +168,7 @@ struct ProviderCard: View {
                     .font(Theme.Text.captionTight)
             }
             if provider.id == KnownProvider.claude.id && provider.confidence == .estimated {
-                Text("Claude Code limits appear after its official statusLine hook receives a fresh update. Claude conversations are kept separately in History.")
+                Text("Claude limits appear after its official statusLine hook receives a fresh update. Claude activity remains separate in History.")
                     .font(.system(size: 9))
                     .foregroundStyle(.tertiary)
                     .fixedSize(horizontal: false, vertical: true)

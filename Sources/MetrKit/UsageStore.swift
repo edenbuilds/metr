@@ -45,7 +45,8 @@ public final class UsageStore: ObservableObject {
             guard preferences != oldValue else { return }
             preferencesStore.save(preferences)
             if preferences.refresh != oldValue.refresh { restartTimer() }
-            if preferences.dataSource != oldValue.dataSource {
+            if preferences.dataSource != oldValue.dataSource
+                || preferences.enabledOptionalAppIDs != oldValue.enabledOptionalAppIDs {
                 rebuildDataSource()
                 Task { await refresh() }
             }
@@ -95,7 +96,7 @@ public final class UsageStore: ObservableObject {
         let loaded = preferencesStore.load()
         self.preferences = loaded
         self.onboarding = onboardingStore.load()
-        self.dataSource = dataSource ?? Self.makeDataSource(for: loaded.dataSource)
+        self.dataSource = dataSource ?? Self.makeDataSource(for: loaded.dataSource, optionalAppIDs: loaded.enabledOptionalAppIDs)
 
         timeZoneObserver = NotificationCenter.default.addObserver(
             forName: Notification.Name.NSSystemTimeZoneDidChange,
@@ -125,9 +126,9 @@ public final class UsageStore: ObservableObject {
         tickTimer?.invalidate()
     }
 
-    private static func makeDataSource(for kind: DataSourceKind) -> UsageDataSource {
+    private static func makeDataSource(for kind: DataSourceKind, optionalAppIDs: Set<String> = []) -> UsageDataSource {
         switch kind {
-        case .local: return LocalActivityDataSource()
+        case .local: return LocalActivityDataSource(optionalAppIDs: optionalAppIDs)
         case .mock:
             // `METR_SCENARIO` picks which demo situation to show, so the offline,
             // stale, auth-required and empty surfaces can all be reviewed.
@@ -137,7 +138,7 @@ public final class UsageStore: ObservableObject {
     }
 
     private func rebuildDataSource() {
-        dataSource = Self.makeDataSource(for: preferences.dataSource)
+        dataSource = Self.makeDataSource(for: preferences.dataSource, optionalAppIDs: preferences.enabledOptionalAppIDs)
     }
 
     public var dataSourceProvenance: String { dataSource.provenance }

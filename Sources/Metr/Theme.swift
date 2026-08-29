@@ -69,6 +69,7 @@ enum Theme {
         case "indigo": return Color(nsColor: .systemIndigo)
         case "mint": return Color(nsColor: .systemTeal)
         case "purple": return Color(nsColor: .systemPurple)
+        case "green": return Color(nsColor: .systemGreen)
         default: return Color(nsColor: .systemBlue)
         }
     }

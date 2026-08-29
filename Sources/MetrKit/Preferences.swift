@@ -143,6 +143,8 @@ public struct Preferences: Equatable, Codable, Sendable {
     public var dataSource: DataSourceKind = .local
     /// Provider ids the user has hidden.
     public var hiddenProviderIDs: Set<String> = []
+    /// Optional apps the user explicitly added to the provider view.
+    public var enabledOptionalAppIDs: Set<String> = []
     /// Position along the docked edge, 0 = start, 1 = end. Persisted after a drag.
     public var edgeOffset: Double = 0.06
 
@@ -174,6 +176,7 @@ public struct Preferences: Equatable, Codable, Sendable {
         reduceMotionOverride = value(.reduceMotionOverride, defaults.reduceMotionOverride)
         dataSource = value(.dataSource, defaults.dataSource)
         hiddenProviderIDs = value(.hiddenProviderIDs, defaults.hiddenProviderIDs)
+        enabledOptionalAppIDs = value(.enabledOptionalAppIDs, defaults.enabledOptionalAppIDs)
         edgeOffset = value(.edgeOffset, defaults.edgeOffset)
     }
 

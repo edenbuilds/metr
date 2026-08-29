@@ -220,28 +220,33 @@ struct RailView: View {
     private var isVertical: Bool { store.preferences.mode != .top }
 
     var body: some View {
-        let providers = store.visibleProviders
         Group {
             if isVertical {
-                VStack(spacing: Theme.Space.tight) {
-                    ForEach(providers) { provider in dockItem(provider) }
-                }
-                .padding(.vertical, Theme.dockSidePadding)
-            } else {
-                HStack(spacing: Theme.Space.snug) {
-                    ForEach(providers) { provider in dockItem(provider) }
+                HStack(spacing: Theme.Space.base) {
+                    if store.preferences.edge == .trailing {
+                        if hovering { peekCard }
+                        Spacer(minLength: 0)
+                        dockContent
+                    } else {
+                        dockContent
+                        Spacer(minLength: 0)
+                        if hovering { peekCard }
+                    }
                 }
                 .padding(.horizontal, Theme.Space.snug)
+            } else {
+                VStack(spacing: Theme.Space.snug) {
+                    if hovering { peekCard }
+                    dockContent
+                }
+                .padding(.vertical, Theme.Space.snug)
             }
         }
-        .background(dockSurface)
-        .clipShape(Capsule())
-        .overlay(Capsule().strokeBorder(Color.primary.opacity(0.14), lineWidth: 0.5))
-        .shadow(color: .black.opacity(hovering ? 0.28 : 0.2), radius: hovering ? 16 : 10, y: 4)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .contentShape(Rectangle())
         .onHover { hovering in
             withAnimation(motion.accent) { self.hovering = hovering }
+            actions.setRailHover(hovering)
         }
         .animation(motion.accent, value: hovering)
         .accessibilityElement()
@@ -251,6 +256,72 @@ struct RailView: View {
 
     private var dockSurface: some ShapeStyle {
         Color(nsColor: .controlBackgroundColor).opacity(0.98)
+    }
+
+    private var dockContent: some View {
+        VStack(spacing: Theme.Space.tight) {
+            ForEach(store.visibleProviders) { provider in dockItem(provider) }
+        }
+        .padding(.vertical, isVertical ? Theme.dockSidePadding : 0)
+        .padding(.horizontal, isVertical ? 0 : Theme.Space.snug)
+        .background(dockSurface)
+        .clipShape(Capsule())
+        .overlay(Capsule().strokeBorder(Color.primary.opacity(0.14), lineWidth: 0.5))
+        .shadow(color: .black.opacity(hovering ? 0.28 : 0.2), radius: hovering ? 16 : 10, y: 4)
+    }
+
+    @ViewBuilder
+    private var peekCard: some View {
+        if let provider = hoveredProvider.flatMap({ id in store.visibleProviders.first { $0.id == id } }) ?? store.focusProvider {
+            let fraction = provider.usedFraction
+            let reset = store.resetDescription(for: provider)
+            let spokenFraction = fraction.map(Formatters.percent) ?? "unknown"
+            VStack(alignment: .leading, spacing: Theme.Space.snug) {
+                HStack(spacing: Theme.Space.snug) {
+                    ProviderLogo(identity: provider.identity, size: 18)
+                    Text(provider.identity.name).font(Theme.Text.heading)
+                    Spacer(minLength: 0)
+                    Text(provider.state.label).font(Theme.Text.fine).foregroundStyle(.secondary)
+                }
+                HStack(alignment: .firstTextBaseline) {
+                    Text(fraction.map(Formatters.percent) ?? "—")
+                        .font(Theme.Text.metricLarge)
+                    Text("used").font(Theme.Text.captionTight).foregroundStyle(.secondary)
+                    Spacer()
+                    if let resetAt = provider.quotaPeriods.first?.resetAt {
+                        Text("Resets \(Formatters.countdown(resetAt.timeIntervalSince(store.now)))")
+                            .font(Theme.Text.fine.monospacedDigit())
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                Meter(
+                    fraction: fraction ?? 0,
+                    tint: Theme.tint(provider.identity.tintName),
+                    severity: provider.severity(thresholds: store.preferences.thresholds),
+                    thresholds: store.preferences.thresholds,
+                    showsThresholds: false
+                )
+                if let weekly = provider.quotaPeriods.dropFirst().first {
+                    HStack {
+                        Text(weekly.label).font(Theme.Text.fine).foregroundStyle(.secondary)
+                        Spacer()
+                        Text(Formatters.percent(weekly.usedFraction)).font(Theme.Text.fine.monospacedDigit())
+                    }
+                }
+                Text(provider.confidence == .measured ? "Provider limit" : "Local activity estimate")
+                    .font(Theme.Text.fine)
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(Theme.Space.roomy)
+            .frame(width: 222, alignment: .leading)
+            .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous).strokeBorder(Theme.cardStroke.opacity(0.7), lineWidth: 0.5))
+            .shadow(color: .black.opacity(0.22), radius: 14, y: 5)
+            .transition(motion.reduceMotion ? .opacity : .scale(scale: 0.96, anchor: store.preferences.edge == .trailing ? .trailing : .leading).combined(with: .opacity))
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Quick \(provider.identity.name) status")
+            .accessibilityValue("\(spokenFraction) used. \(reset.primary). \(reset.countdown).")
+        }
     }
 
     private func dockItem(_ provider: ProviderSnapshot) -> some View {

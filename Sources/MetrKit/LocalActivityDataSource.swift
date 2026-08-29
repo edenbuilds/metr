@@ -36,6 +36,7 @@ public final class LocalActivityDataSource: UsageDataSource {
     private let home: URL
     private let fileManager: FileManager
     private let costModel: CostModel
+    private let optionalAppIDs: Set<String>
     /// Cap on how many project directories we stat per refresh, so a machine
     /// with hundreds of projects does not turn a refresh into a disk sweep.
     private let projectDirectoryLimit: Int
@@ -44,12 +45,14 @@ public final class LocalActivityDataSource: UsageDataSource {
         home: URL = FileManager.default.homeDirectoryForCurrentUser,
         fileManager: FileManager = .default,
         costModel: CostModel = CostModel(),
-        projectDirectoryLimit: Int = 8
+        projectDirectoryLimit: Int = 8,
+        optionalAppIDs: Set<String> = []
     ) {
         self.home = home
         self.fileManager = fileManager
         self.costModel = costModel
         self.projectDirectoryLimit = projectDirectoryLimit
+        self.optionalAppIDs = optionalAppIDs
     }
 
     public func fetch(now: Date) async -> UsageSnapshot {
@@ -74,14 +77,16 @@ public final class LocalActivityDataSource: UsageDataSource {
             now: now,
             missingReason: "No ~/.codex/session_index.jsonl on this Mac."
         ))
-        providers.append(ProviderSnapshot(
-            identity: KnownProvider.cursor,
-            model: nil,
-            state: .unavailable(reason: "Cursor does not expose a trustworthy local plan-limit feed."),
-            window: UsageWindow(cadence: .rolling(hours: 5), timeZone: .current),
-            confidence: .measured,
-            sourceDescription: "Cursor is shown as available to configure, but metr does not invent quota from editor telemetry."
-        ))
+        for app in AppCatalog.all where optionalAppIDs.contains(app.id) {
+            providers.append(ProviderSnapshot(
+                identity: app.identity,
+                model: nil,
+                state: .unavailable(reason: "(app.name) does not expose a trustworthy local plan-limit feed."),
+                window: UsageWindow(cadence: .rolling(hours: 5), timeZone: .current),
+                confidence: .measured,
+                sourceDescription: "(app.name) is enabled for visibility, but metr does not invent quota from editor telemetry."
+            ))
+        }
 
         async let codexQuota = ProviderQuotaClient.fetchCodex(home: home, now: now)
         async let claudeQuota = ProviderQuotaClient.fetchClaude(home: home, now: now)
@@ -109,6 +114,7 @@ public final class LocalActivityDataSource: UsageDataSource {
             capturedAt: now
         )
     }
+
 
     // MARK: - Provider synthesis
 

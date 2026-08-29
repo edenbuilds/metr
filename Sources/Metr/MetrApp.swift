@@ -97,6 +97,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         statusItem.behavior = []          // never let a drag remove it from the menu bar
         statusItem.isVisible = true
         guard let button = statusItem.button else { return }
+        statusItem.length = NSStatusItem.squareLength
+        button.imagePosition = .imageOnly
+        button.imageScaling = .scaleProportionallyUpOrDown
         button.image = MenuBarIcon.image(level: 0.15, severity: .nominal, isKnown: false)
         button.image?.isTemplate = true
         // A target/action on the status button means Return activates it during
@@ -112,11 +115,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private func updateStatusItem() {
         guard let button = statusItem?.button else { return }
         let status = store.headerStatus
-        if let focus = store.focusProvider, let fraction = focus.usedFraction {
-            button.title = " \(Formatters.percent(fraction))"
-        } else {
-            button.title = ""
-        }
+        button.title = ""
         // The menu-bar glyph fills with the same level the panel shows, so the
         // menu bar alone tells you where you stand.
         button.image = MenuBarIcon.image(

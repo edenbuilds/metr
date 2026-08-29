@@ -74,7 +74,7 @@ struct PreferencesView: View {
 
             GroupBox("Claude Code") {
                 VStack(alignment: .leading, spacing: Theme.Space.snug) {
-                    Text("Claude Code limits are read from its official statusLine payload and shown as measured only when a fresh five-hour or seven-day limit is available. Claude Desktop conversations remain available as local history.")
+                    Text("Claude limits are read from its official statusLine payload and shown as measured only when a fresh five-hour or seven-day limit is available. Claude Desktop activity remains available as local history.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -103,6 +103,27 @@ struct PreferencesView: View {
                             else { store.preferences.hiddenProviderIDs.insert(provider.id) }
                         }
                     ))
+                }
+            }
+
+            Section("Add apps") {
+                Text("Optional apps appear in the dock and detailed view only after you add them. metr will never turn local editor activity into a fake plan limit.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                ForEach(AppCatalog.all) { app in
+                    Toggle(isOn: Binding(
+                        get: { store.preferences.enabledOptionalAppIDs.contains(app.id) },
+                        set: { enabled in
+                            if enabled { store.preferences.enabledOptionalAppIDs.insert(app.id) }
+                            else { store.preferences.enabledOptionalAppIDs.remove(app.id) }
+                        }
+                    )) {
+                        HStack(spacing: Theme.Space.snug) {
+                            ProviderLogo(identity: app.identity, size: 16)
+                            Text(app.name)
+                        }
+                    }
                 }
             }
         }

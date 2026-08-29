@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.0 — 2026-08-30
+
+- Added a compact hover peek with the active usage percentage, reset countdown, weekly window, and a clear measured-versus-estimated label.
+- Kept the metr menu-bar glyph permanently visible by default, with quiet refresh motion and critical-state attention pulses.
+- Added an opt-in catalog of popular AI apps with bundled SVG marks; optional apps remain unavailable until they expose a trustworthy local or provider quota feed.
+- Removed Cursor from the default provider surface while retaining it as an explicit optional app.
+- Tightened side-dock geometry so the expanded view stays bounded and scrollable rather than filling the screen.
+- Renamed the primary provider label to Claude and kept Claude activity history separate without exposing conversation wording in the main UI.
+
 ## 0.3.1 — 2026-08-30
 
 - Fixed minimized-dock hover expanding the whole panel; expansion now happens only on click.

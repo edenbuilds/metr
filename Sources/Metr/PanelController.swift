@@ -270,8 +270,11 @@ final class PanelController: NSObject, NSWindowDelegate {
         let count = CGFloat(max(1, store.visibleProviders.count))
         let sideWidth = Theme.dockWidth
         let sideHeight = count * Theme.dockRowHeight + Theme.dockSidePadding * 2
+        let peekWidth: CGFloat = metrics.railHovered ? 232 : 0
+        let peekGap: CGFloat = metrics.railHovered ? 8 : 0
+        let sideFrameWidth = sideWidth + peekWidth + peekGap
         let topWidth = max(176, count * 88 + 20)
-        let topHeight = Theme.dockTopHeight
+        let topHeight = Theme.dockTopHeight + (metrics.railHovered ? 112 : 0)
         let offset = CGFloat(min(max(store.preferences.edgeOffset, 0), 1))
 
         switch store.preferences.mode {
@@ -284,9 +287,9 @@ final class PanelController: NSObject, NSWindowDelegate {
             let travel = max(0, visible.height - sideHeight)
             let y = visible.maxY - sideHeight - travel * offset
             let x = store.preferences.edge == .trailing
-                ? visible.maxX - sideWidth
+                ? visible.maxX - sideFrameWidth
                 : visible.minX
-            return CGRect(x: x, y: y, width: sideWidth, height: sideHeight)
+            return CGRect(x: x, y: y, width: sideFrameWidth, height: sideHeight)
         }
     }
 
