@@ -60,6 +60,7 @@ final class PanelController: NSObject, NSWindowDelegate {
     private var snapWorkItem: DispatchWorkItem?
     private var autoHideWorkItem: DispatchWorkItem?
     private var railDragOrigin: NSPoint?
+    private var railHoverWorkItem: DispatchWorkItem?
 
     /// True when the panel is showing only its edge rail.
     private var isRailed: Bool {
@@ -161,9 +162,26 @@ final class PanelController: NSObject, NSWindowDelegate {
     }
 
     private func setRailHover(_ hovering: Bool) {
-        guard metrics.railHovered != hovering else { return }
-        metrics.railHovered = hovering
-        layout(animated: true)
+        railHoverWorkItem?.cancel()
+        if hovering {
+            guard !metrics.railHovered else { return }
+            metrics.railHovered = true
+            layout(animated: true)
+            return
+        }
+
+        // The rail briefly changes width when its preview appears. Debouncing
+        // exit prevents that animated re-layout from stealing the pointer and
+        // collapsing the preview before the user can reach it.
+        let work = DispatchWorkItem { [weak self] in
+            MainActor.assumeIsolated {
+                guard let self, self.metrics.railHovered else { return }
+                self.metrics.railHovered = false
+                self.layout(animated: true)
+            }
+        }
+        railHoverWorkItem = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.24, execute: work)
     }
 
     private func dragRailChanged(_ translation: CGSize) {

@@ -290,6 +290,9 @@ struct RailView: View {
             withAnimation(motion.accent) { hovering = value }
             actions.setRailHover(value)
         }
+        // A click anywhere on the rail is an intentional open gesture. This
+        // also gives trackpad users a generous target beyond the small badges.
+        .onTapGesture { actions.setExpanded(true) }
         .simultaneousGesture(
             DragGesture(minimumDistance: 5)
                 .onChanged { value in actions.dragRailChanged(value.translation) }
