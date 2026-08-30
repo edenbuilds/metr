@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.9 — 2026-08-30
+
+- Show Claude Code custom session names from local metadata, without rendering transcript content.
+- Add context budget and recent Claude session details to the compact hover card.
+- Reserve a bounded side-dock hover surface so the preview stays readable without expanding to screen height.
+
 ## 0.5.8 — 2026-08-30
 
 - Restored metr’s dedicated AppKit status item as the sole menu-bar implementation.

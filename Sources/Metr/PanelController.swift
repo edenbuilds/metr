@@ -315,7 +315,9 @@ final class PanelController: NSObject, NSWindowDelegate {
     private func railFrame(in visible: CGRect) -> CGRect {
         let count = CGFloat(max(1, store.visibleProviders.count))
         let sideWidth = Theme.dockWidth
-        let sideHeight = (count + 1) * Theme.dockRowHeight + Theme.dockSidePadding * 2
+        // Reserve enough room for the hover card's context and two session
+        // titles without making the card itself grow the window on hover.
+        let sideHeight = max((count + 1) * Theme.dockRowHeight + Theme.dockSidePadding * 2, 286)
         // Keep the window geometry stable while the pointer is over the rail.
         // The preview fades within this reserved space instead of forcing an
         // AppKit window constraint pass during a SwiftUI hover update.

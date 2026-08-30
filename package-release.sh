@@ -2,7 +2,7 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-VERSION="0.5.8"
+VERSION="0.5.9"
 RELEASE_DIR="$(pwd)/release"
 STAGING_DIR="$RELEASE_DIR/dmg"
 

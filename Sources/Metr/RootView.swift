@@ -352,6 +352,11 @@ struct RailView: View {
                     thresholds: store.preferences.thresholds,
                     showsThresholds: false
                 )
+                if let contextUsed = provider.contextUsed,
+                   let contextBudget = provider.contextBudget,
+                   contextBudget > 0 {
+                    contextRow(used: contextUsed, budget: contextBudget, tint: Theme.tint(provider.identity.tintName))
+                }
                 if let weekly = provider.quotaPeriods.dropFirst().first {
                     HStack {
                         Text(weekly.label).font(Theme.Text.fine).foregroundStyle(.secondary)
@@ -362,6 +367,30 @@ struct RailView: View {
                 Text(provider.confidence == .measured ? "Provider limit" : "Local activity estimate")
                     .font(Theme.Text.fine)
                     .foregroundStyle(.tertiary)
+                let sessions = store.snapshot.sessions
+                    .filter { $0.providerID == provider.id }
+                    .prefix(2)
+                if !sessions.isEmpty {
+                    Divider().opacity(0.55)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Recent \(provider.identity.name) sessions")
+                            .font(Theme.Text.fine.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                        ForEach(Array(sessions)) { session in
+                            HStack(spacing: 5) {
+                                Circle().fill(Theme.tint(provider.identity.tintName)).frame(width: 4, height: 4)
+                                Text(session.title)
+                                    .font(Theme.Text.fine)
+                                    .lineLimit(1)
+                                    .truncationMode(.middle)
+                                Spacer(minLength: 0)
+                                Text(Formatters.time(session.lastActive, in: store.location.timeZone))
+                                    .font(Theme.Text.fine.monospacedDigit())
+                                    .foregroundStyle(.tertiary)
+                            }
+                        }
+                    }
+                }
             }
             .padding(Theme.Space.roomy)
             .frame(width: 222, alignment: .leading)
@@ -372,6 +401,27 @@ struct RailView: View {
             .accessibilityElement(children: .combine)
             .accessibilityLabel("Quick \(provider.identity.name) status")
             .accessibilityValue("\(spokenFraction) \(showsRemaining ? "remaining" : "used"). \(reset.primary). \(reset.countdown).")
+        }
+    }
+
+    private func contextRow(used: Int, budget: Int, tint: Color) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text("Context")
+                    .font(Theme.Text.fine)
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Text("\(Formatters.compactCount(used)) / \(Formatters.compactCount(budget))")
+                    .font(Theme.Text.fine.monospacedDigit())
+                    .foregroundStyle(.secondary)
+            }
+            Meter(
+                fraction: min(1, Double(used) / Double(budget)),
+                tint: tint,
+                severity: .nominal,
+                thresholds: store.preferences.thresholds,
+                showsThresholds: false
+            )
         }
     }
 

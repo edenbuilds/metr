@@ -287,7 +287,7 @@ public final class LocalActivityDataSource: UsageDataSource {
             for (file, modified) in transcripts {
                 records.append(SessionRecord(
                     id: "claude-\(file.deletingPathExtension().lastPathComponent)",
-                    title: Self.projectTitle(fromSlug: dir.lastPathComponent),
+                    title: Self.sessionTitle(from: file) ?? Self.projectTitle(fromSlug: dir.lastPathComponent),
                     providerID: KnownProvider.claude.id,
                     lastActive: modified,
                     workingDirectory: Self.projectPath(fromSlug: dir.lastPathComponent)
@@ -295,6 +295,24 @@ public final class LocalActivityDataSource: UsageDataSource {
             }
         }
         return records
+    }
+
+    /// Claude Code writes a `custom-title` event into the session JSONL. Read
+    /// only that metadata line; transcript content is intentionally ignored.
+    private static func sessionTitle(from url: URL) -> String? {
+        guard let data = try? Data(contentsOf: url, options: .mappedIfSafe) else { return nil }
+        struct TitleEvent: Decodable {
+            let type: String
+            let customTitle: String?
+        }
+        let decoder = JSONDecoder()
+        return data.split(separator: 10).reversed().compactMap { line in
+            guard let event = try? decoder.decode(TitleEvent.self, from: Data(line)),
+                  event.type == "custom-title",
+                  let title = event.customTitle?.trimmingCharacters(in: .whitespacesAndNewlines),
+                  !title.isEmpty else { return nil }
+            return title
+        }.first
     }
 
     /// "-Users-alex--projects-foo-bar" -> "foo bar".
