@@ -12,6 +12,16 @@ struct MetrApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     var body: some Scene {
+        MenuBarExtra {
+            Button("Open metr") { appDelegate.showPanelFromMenuBar() }
+            Button("Refresh usage") { appDelegate.refreshFromMenuBar() }
+            Divider()
+            Button("Preferences…") { appDelegate.showPreferencesFromMenuBar() }
+            Button("Quit metr") { NSApplication.shared.terminate(nil) }
+        } label: {
+            MetrCatLogo(size: 18)
+                .accessibilityLabel("metr")
+        }
         Settings { EmptyView() }
     }
 }
@@ -33,8 +43,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var previousSeverity: Severity?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        NSApp.setActivationPolicy(.accessory)
-
         motion.userReducesMotion = store.preferences.reduceMotionOverride
         applyAppearance(store.preferences.appearance)
         // Keep the reported login-item state honest at launch: the user may have
@@ -102,24 +110,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     // MARK: Status item
 
     private func buildStatusItem() {
-        statusItem = NSStatusBar.system.statusItem(withLength: 48)
+        // A compact permanent native item survives menu-bar layout changes.
+        statusItem = NSStatusBar.system.statusItem(withLength: 52)
         statusItem.behavior = []          // never let a drag remove it from the menu bar
         statusItem.isVisible = true
         guard let button = statusItem.button else { return }
-        statusItem.length = 48
-        button.imagePosition = .imageLeading
+        statusItem.length = 52
+        button.imagePosition = .imageLeft
         button.imageScaling = .scaleProportionallyUpOrDown
         button.title = "metr"
-        button.font = NSFont.systemFont(ofSize: 11, weight: .semibold)
-        button.image = brandStatusImage()
-            ?? MenuBarIcon.image(level: 0.15, severity: .nominal, isKnown: false)
+        button.attributedTitle = NSAttributedString(
+            string: "metr",
+            attributes: [.font: NSFont.systemFont(ofSize: 11, weight: .semibold), .foregroundColor: NSColor.labelColor]
+        )
+        button.image = appIconStatusImage()
+            ?? brandStatusImage()
         button.image?.size = NSSize(width: 18, height: 18)
         button.image?.isTemplate = false
-        // A target/action on the status button means Return activates it during
-        // full keyboard navigation, not just a mouse click.
-        button.target = self
-        button.action = #selector(statusItemClicked)
-        button.sendAction(on: [.leftMouseUp, .rightMouseUp])
+        statusItem.menu = makeStatusMenu()
         button.setAccessibilityLabel("metr")
         NSLog("metr: menu-bar status item installed")
     }
@@ -130,9 +138,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         guard let button = statusItem?.button else { return }
         let status = store.headerStatus
         button.title = "metr"
+        button.attributedTitle = NSAttributedString(
+            string: "metr",
+            attributes: [.font: NSFont.systemFont(ofSize: 11, weight: .semibold), .foregroundColor: NSColor.labelColor]
+        )
         // The menu-bar glyph fills with the same level the panel shows, so the
         // menu bar alone tells you where you stand.
-        button.image = brandStatusImage()
+        button.image = appIconStatusImage()
+            ?? brandStatusImage()
             ?? MenuBarIcon.image(
                 level: store.focusProvider?.usedFraction ?? 0.15,
                 severity: status.severity,
@@ -142,6 +155,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         button.image?.isTemplate = false
         button.toolTip = "\(Brand.name) — \(status.label)"
         button.setAccessibilityLabel("metr, \(status.label)")
+        statusItem?.menu = makeStatusMenu()
     }
 
     /// Keep the menu-bar readout in lockstep with every refresh. While a read
@@ -177,7 +191,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 let offsets: [Double] = [0, 0.04, 0.08, 0.04]
                 let status = self.store.headerStatus
                 let level = min(1, (self.store.focusProvider?.usedFraction ?? 0.15) + offsets[self.statusWaveStep % offsets.count])
-                button.image = self.brandStatusImage()
+                button.image = self.appIconStatusImage()
+                    ?? self.brandStatusImage()
                     ?? MenuBarIcon.image(level: level, severity: status.severity, isKnown: status.isKnown)
                 button.image?.size = NSSize(width: 18, height: 18)
                 button.image?.isTemplate = false
@@ -196,8 +211,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         } else {
             name = "cat-light"
         }
-        guard let url = Bundle.module.url(forResource: name, withExtension: "png", subdirectory: "Branding")
+        let resourceBundle = Bundle(path: Bundle.main.path(forResource: "metr_Metr", ofType: "bundle") ?? "")
+        guard let url = resourceBundle?.url(forResource: name, withExtension: "png")
+                ?? Bundle.module.url(forResource: name, withExtension: "png", subdirectory: "Branding")
                 ?? Bundle.module.url(forResource: name, withExtension: "png"),
+              let image = NSImage(contentsOf: url) else { return nil }
+        image.size = NSSize(width: 18, height: 18)
+        return image
+    }
+
+    private func appIconStatusImage() -> NSImage? {
+        guard let url = Bundle.main.url(forResource: "metr", withExtension: "icns"),
               let image = NSImage(contentsOf: url) else { return nil }
         image.size = NSSize(width: 18, height: 18)
         return image
@@ -226,6 +250,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     private func showMenu() {
+        let menu = makeStatusMenu()
+        statusItem?.menu = menu
+        statusItem?.button?.performClick(nil)
+    }
+
+    private func makeStatusMenu() -> NSMenu {
         let menu = NSMenu()
         menu.addItem(withTitle: panelController.isVisible ? "Hide metr" : "Show metr",
                      action: #selector(togglePanel), keyEquivalent: "")
@@ -238,9 +268,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(.separator())
         menu.addItem(withTitle: "Quit metr", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         menu.items.forEach { $0.target = $0.target ?? self }
-        statusItem.menu = menu
-        statusItem.button?.performClick(nil)
-        statusItem.menu = nil   // restore click-to-toggle for the next left click
+        menu.delegate = self
+        return menu
     }
 
     @objc private func togglePanel() { panelController.toggle() }

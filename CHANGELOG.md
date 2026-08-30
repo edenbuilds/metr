@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.5.8 — 2026-08-30
+
+- Restored metr’s dedicated AppKit status item as the sole menu-bar implementation.
+
+## 0.5.7 — 2026-08-30
+
+- Switched the menu-bar entry to a guaranteed native text-backed `metr` extra.
+
+## 0.5.6 — 2026-08-30
+
+- Prioritized the cat app icon as the menu-bar image so the glyph cannot fall back to the legacy status mark.
+
+## 0.5.5 — 2026-08-30
+
+- Made the menu-bar control fixed-width and explicitly text-backed with the cat icon.
+- Added a resource-bundle and cat app-icon fallback so the status item cannot regress to the old glyph.
+
+## 0.5.4 — 2026-08-30
+
+- Made the always-on menu-bar control explicitly text-backed as `metr` beside the cat glyph.
+- Preserved right-top side-dock alignment while keeping the rail draggable.
+
 ## 0.5.3 — 2026-08-30
 
 - Fixed cat logo resource lookup so the dock and menu bar render the supplied mark.
