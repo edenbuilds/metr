@@ -12,22 +12,6 @@ struct MetrApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     var body: some Scene {
-        // MenuBarExtra owns the persistent status item. This keeps the metr
-        // mark visible through macOS menu-bar layout/overflow rules while the
-        // AppKit panel remains responsible for the floating dock.
-        MenuBarExtra {
-            Button("Show metr") { appDelegate.showPanelFromMenuBar() }
-            Button("Refresh now") { appDelegate.refreshFromMenuBar() }
-            Divider()
-            Button("Preferences…") { appDelegate.showPreferencesFromMenuBar() }
-            Button("Quit metr") { NSApp.terminate(nil) }
-        } label: {
-            Label {
-                Text("metr")
-            } icon: {
-                MetrCatLogo(size: 16)
-            }
-        }
         Settings { EmptyView() }
     }
 }
@@ -76,11 +60,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             self?.deliver(alerts)
         }
 
+        buildStatusItem()
+        observeUsageStatus()
         installKeyMonitor()
         requestNotificationAuthorizationIfNeeded()
 
         store.start()
         panelController.show()
+        updateStatusItem()
 
         // Reflect the preferences flag the panel raises.
         observePreferencesRequests()
@@ -203,7 +190,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     private func brandStatusImage() -> NSImage? {
-        guard let url = Bundle.main.url(forResource: "metr", withExtension: "icns"),
+        let name: String
+        if NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua {
+            name = "cat-dark"
+        } else {
+            name = "cat-light"
+        }
+        guard let url = Bundle.module.url(forResource: name, withExtension: "png", subdirectory: "Branding")
+                ?? Bundle.module.url(forResource: name, withExtension: "png"),
               let image = NSImage(contentsOf: url) else { return nil }
         image.size = NSSize(width: 18, height: 18)
         return image

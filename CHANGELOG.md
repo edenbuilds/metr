@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.3 — 2026-08-30
+
+- Fixed cat logo resource lookup so the dock and menu bar render the supplied mark.
+
 ## 0.5.2 — 2026-08-30
 
 - Fixed the hover crash by keeping rail window geometry stable while the preview animates.

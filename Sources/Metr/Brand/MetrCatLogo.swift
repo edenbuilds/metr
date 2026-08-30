@@ -19,7 +19,8 @@ struct MetrCatLogo: View {
 
     private var image: NSImage {
         let name = colorScheme == .dark ? "cat-dark" : "cat-light"
-        if let url = Bundle.module.url(forResource: name, withExtension: "png", subdirectory: "Branding"),
+        if let url = Bundle.module.url(forResource: name, withExtension: "png", subdirectory: "Branding")
+            ?? Bundle.module.url(forResource: name, withExtension: "png"),
            let image = NSImage(contentsOf: url) {
             return image
         }
