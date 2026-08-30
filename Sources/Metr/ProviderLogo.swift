@@ -23,7 +23,7 @@ struct ProviderLogo: View {
         Group {
             if let image = loadImage() {
                 Image(nsImage: image)
-                    .renderingMode(.template)
+                    .renderingMode(assetID == "anthropic" ? .original : .template)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .foregroundStyle(.primary.opacity(0.88))

@@ -226,19 +226,19 @@ struct RailView: View {
             if isVertical {
                 HStack(spacing: Theme.Space.base) {
                     if store.preferences.edge == .trailing {
-                        if hovering { peekCard }
+                        peekCard.opacity(hovering ? 1 : 0)
                         Spacer(minLength: 0)
                         dockContent
                     } else {
                         dockContent
                         Spacer(minLength: 0)
-                        if hovering { peekCard }
+                        peekCard.opacity(hovering ? 1 : 0)
                     }
                 }
                 .padding(.horizontal, Theme.Space.snug)
             } else {
                 VStack(spacing: Theme.Space.snug) {
-                    if hovering { peekCard }
+                    peekCard.opacity(hovering ? 1 : 0)
                     dockContent
                 }
                 .padding(.vertical, Theme.Space.snug)
@@ -268,13 +268,31 @@ struct RailView: View {
 
     private var dockContent: some View {
         VStack(spacing: Theme.Space.tight) {
+            Button { actions.setExpanded(true) } label: {
+                ZStack {
+                    MetrCatLogo(size: 28)
+                    Circle()
+                        .stroke(Color.primary.opacity(0.18), lineWidth: 1)
+                        .frame(width: 34, height: 34)
+                }
+                .frame(width: isVertical ? 62 : 80, height: 38)
+            }
+            .buttonStyle(.plain)
+            .help("Open metr")
+            .accessibilityLabel("Open metr")
+            .accessibilityHint("Show detailed usage")
+            .scaleEffect(hovering ? 1.04 : 1)
+
             ForEach(store.visibleProviders) { provider in dockItem(provider) }
         }
         .padding(.vertical, isVertical ? Theme.dockSidePadding : 0)
         .padding(.horizontal, isVertical ? 0 : Theme.Space.snug)
-        .background(dockSurface)
+        .background(
+            dockSurface
+                .shadow(.inner(color: .white.opacity(0.08), radius: 0.5, y: 0.5))
+        )
         .clipShape(Capsule())
-        .overlay(Capsule().strokeBorder(Color.primary.opacity(0.14), lineWidth: 0.5))
+        .overlay(Capsule().strokeBorder(Color.primary.opacity(0.20), lineWidth: 0.7))
         .shadow(color: .black.opacity(hovering ? 0.28 : 0.2), radius: hovering ? 16 : 10, y: 4)
         .overlay(alignment: isVertical ? .top : .leading) {
             Capsule()
@@ -372,7 +390,11 @@ struct RailView: View {
                 }
             }
             .frame(width: isVertical ? 62 : 80, height: isVertical ? 52 : 52)
-            .background(Color.primary.opacity(isHovered ? 0.09 : 0.035), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .background(Color.primary.opacity(isHovered ? 0.12 : 0.045), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .strokeBorder(Color.primary.opacity(isHovered ? 0.16 : 0.06), lineWidth: 0.6)
+            )
             .scaleEffect(isHovered ? 1.06 : 1)
         }
         .buttonStyle(.plain)

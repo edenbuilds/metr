@@ -21,7 +21,7 @@ In one glance: how much you have used, how much remains, when the window resets,
 
 ## Install
 
-Download `metr-v0.5.1.dmg`, drag `metr.app` to Applications, then open it. This preview is ad-hoc signed rather than notarized, so another Mac may require right-click → Open once.
+Download `metr-v0.5.2.dmg`, drag `metr.app` to Applications, then open it. This preview is ad-hoc signed rather than notarized, so another Mac may require right-click → Open once.
 
 For the most reliable Claude Code quota readings, run `./configure-claude-statusline.sh` after installing. It makes a timestamped backup of Claude Code settings and installs an official `rate_limits` statusLine hook. metr accepts that fresh local snapshot for ten minutes, then falls back honestly.
 

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.2 — 2026-08-30
+
+- Fixed the hover crash by keeping rail window geometry stable while the preview animates.
+- Added the Claude flower mark and cat-branded rail header.
+
 ## 0.5.1 — 2026-08-30
 
 - Fixed Claude/Anthropic SVG rendering on macOS.

@@ -64,7 +64,7 @@ final class PanelController: NSObject, NSWindowDelegate {
 
     /// True when the panel is showing only its edge rail.
     private var isRailed: Bool {
-        !store.preferences.expanded && store.preferences.autoHide && !store.preferences.pinned && !metrics.railHovered
+        !store.preferences.expanded && store.preferences.autoHide && !store.preferences.pinned
     }
 
     init(store: UsageStore, motion: MotionSettings) {
@@ -166,7 +166,6 @@ final class PanelController: NSObject, NSWindowDelegate {
         if hovering {
             guard !metrics.railHovered else { return }
             metrics.railHovered = true
-            layout(animated: true)
             return
         }
 
@@ -177,7 +176,6 @@ final class PanelController: NSObject, NSWindowDelegate {
             MainActor.assumeIsolated {
                 guard let self, self.metrics.railHovered else { return }
                 self.metrics.railHovered = false
-                self.layout(animated: true)
             }
         }
         railHoverWorkItem = work
@@ -253,7 +251,7 @@ final class PanelController: NSObject, NSWindowDelegate {
             : cardFrame(in: visible)
 
         let interactive = isRailed
-            ? CGRect(origin: .zero, size: frame.size)
+            ? railInteractiveRect(in: frame)
             : CGRect(x: Theme.shadowMargin, y: Theme.shadowMargin,
                      width: frame.width - Theme.shadowMargin * 2,
                      height: frame.height - Theme.shadowMargin * 2)
@@ -274,6 +272,15 @@ final class PanelController: NSObject, NSWindowDelegate {
             panel.setFrame(frame, display: true)
             isProgrammaticMove = false
         }
+    }
+
+    private func railInteractiveRect(in frame: CGRect) -> CGRect {
+        guard store.preferences.mode != .top else { return CGRect(origin: .zero, size: frame.size) }
+        let width = Theme.dockWidth + Theme.Space.roomy
+        if store.preferences.edge == .trailing {
+            return CGRect(x: max(0, frame.width - width), y: 0, width: width, height: frame.height)
+        }
+        return CGRect(x: 0, y: 0, width: width, height: frame.height)
     }
 
     /// Full card geometry, docked to the configured edge.
@@ -308,12 +315,15 @@ final class PanelController: NSObject, NSWindowDelegate {
     private func railFrame(in visible: CGRect) -> CGRect {
         let count = CGFloat(max(1, store.visibleProviders.count))
         let sideWidth = Theme.dockWidth
-        let sideHeight = count * Theme.dockRowHeight + Theme.dockSidePadding * 2
-        let peekWidth: CGFloat = metrics.railHovered ? 232 : 0
-        let peekGap: CGFloat = metrics.railHovered ? 8 : 0
+        let sideHeight = (count + 1) * Theme.dockRowHeight + Theme.dockSidePadding * 2
+        // Keep the window geometry stable while the pointer is over the rail.
+        // The preview fades within this reserved space instead of forcing an
+        // AppKit window constraint pass during a SwiftUI hover update.
+        let peekWidth: CGFloat = 232
+        let peekGap: CGFloat = 8
         let sideFrameWidth = sideWidth + peekWidth + peekGap
         let topWidth = max(176, count * 88 + 20)
-        let topHeight = Theme.dockTopHeight + (metrics.railHovered ? 112 : 0)
+        let topHeight = Theme.dockTopHeight + 112
         let offset = CGFloat(min(max(store.preferences.edgeOffset, 0), 1))
 
         switch store.preferences.mode {
